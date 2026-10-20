@@ -1,0 +1,43 @@
+name: Pinned doors
+
+# Reads the repositories pinned on the GitHub profile and writes assets/pinned.json.
+# The hall on the home page engraves their names on its brass plaques.
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/pinned-doors.yml"
+      - "scripts/pinned-doors.mjs"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pinned-doors
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Read pinned repositories
+        env:
+          # A personal token in PINS_TOKEN is used if you add one; the built-in token is tried otherwise.
+          GH_TOKEN: ${{ secrets.PINS_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_LOGIN: ${{ github.repository_owner }}
+        run: node scripts/pinned-doors.mjs
+      - name: Save if the pins changed
+        run: |
+          git add assets/pinned.json assets/pins
+          if git diff --cached --quiet; then echo "Pins unchanged."; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update pinned doors"
+          git push

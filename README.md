@@ -22,6 +22,22 @@ The golden key on the table opens every door at once.
 
 Plain HTML, CSS and JavaScript. No build step, no dependencies. Opening `index.html` straight from disk works too.
 
+## The hall
+
+On browsers with WebGL 2 the home page is a photographic hall (`assets/hall.js`, pictures in `assets/hall/`).
+Move the mouse or drag to look around, press W/S or scroll to walk, A/D to choose a door, Enter or a click to step inside.
+Without WebGL 2 the drawn hall from `assets/app.js` is shown instead.
+
+The four brass plaques follow the repositories pinned on your GitHub profile:
+
+1. Pin up to six repositories on your profile (Customize your pins).
+2. `.github/workflows/pinned-doors.yml` reads them every six hours and writes `assets/pinned.json`. Run it by hand from the Actions tab to update at once.
+3. The hall engraves their names on the plaques. A project that has its own page here opens that page; any other repository opens on GitHub.
+4. The rooms were painted for Binance 3D, Sunshore, Woodweave and Ship in Bottle. A different project behind a door gets a framed picture of itself in that room (its screenshot from `assets/img/`, or the repository's custom social preview).
+5. Fewer than four pins: the empty doors use `SITE.hall.defaults` in `assets/projects.js`. Pins five and six are listed behind the All projects door.
+
+If the workflow can't read your pins with the built-in token, add a personal access token (no scopes needed) as the repository secret `PINS_TOKEN`.
+
 ## Put it online (GitHub Pages)
 
 1. Create a **public** repository named exactly `rolanthhuang.github.io` (all lowercase).

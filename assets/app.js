@@ -380,6 +380,14 @@
 
   /* ---------- views ---------- */
 
+  /* The photographic hall (assets/hall.js) when WebGL 2 is available; the drawn hall below otherwise. */
+  var photo = !!(window.PhotoHall && window.PhotoHall.supported());
+  var cameFrom = "";
+  function viewPhotoHall() {
+    return '<section class="view view--photo" aria-labelledby="hall-title">' +
+      '<h1 class="sr-only" id="hall-title" tabindex="-1">' + T(SITE.person.name) + ", " + T(SITE.person.title) + "</h1></section>";
+  }
+
   function viewHall() {
     var P = SITE.person;
     var doors = HALL.map(function (h) {
@@ -858,12 +866,17 @@
     else if (r.name === "who") html = viewWho();
     else if (r.name === "garden") html = viewGarden();
     else if (r.name === "index") html = viewIndex();
-    else html = viewHall();
+    else html = photo ? viewPhotoHall() : viewHall();
     stage.innerHTML = html;
     document.title = titleFor(r);
     var v = stage.firstElementChild;
     var fns = [];
-    if (r.name === "hall") fns.push(mountHall(v));
+    if (r.name === "hall") {
+      if (photo) {
+        var from = cameFrom; cameFrom = "";
+        fns.push(window.PhotoHall.mount({ root: v, lang: lang, from: from, navigate: function (h) { location.hash = h; } }));
+      } else fns.push(mountHall(v));
+    }
     if (r.name === "door") fns.push(mountPeek(v, roomById[r.room], findDoor(r.room, r.door)));
     if (r.name === "who") fns.push(mountSpecimen(v));
     cleanup = function () { fns.forEach(function (fn) { if (fn) fn(); }); };
@@ -892,6 +905,7 @@
     origin = null;
 
     function enter() {
+      cameFrom = prev.key;
       route = next;
       render(next);
       window.scrollTo(0, 0);

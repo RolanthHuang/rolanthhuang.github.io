@@ -11,6 +11,12 @@
   - focus: which part of the screenshot shows through the door's little window.
   - repo:  the GitHub repository name. The "updated" date is read live from GitHub
            when the page opens; the date written here is only the fallback.
+  - hall:  the name engraved on the brass plaque when this project is one of the
+           four doors in the photographic hall (defaults to plate).
+
+  The four plaques in the hall follow the repositories pinned on GitHub
+  (assets/pinned.json, rewritten by .github/workflows/pinned-doors.yml).
+  Empty places are filled from hall.defaults below.
 */
 window.SITE = {
   person: {
@@ -231,6 +237,7 @@ window.SITE = {
           kind: "demo",
           paint: "#B88A33",
           plate: { en: "Market terrain", zh: "市場地形" },
+          hall: { en: "Binance 3D", zh: "市場地形" },
           title: { en: "Market terrain review", zh: "市場地形檢視" },
           context: { en: "Independent consulting project, September to October 2026.", zh: "獨立顧問專案，2026 年 9 至 10 月。" },
           lede: {
@@ -296,8 +303,119 @@ window.SITE = {
           focus: "36% 44%"
         }
       ]
+    },
+    {
+      id: "studio",
+      paint: "#2E5964",
+      wall: "#14262B",
+      glimpse: "#2C4B53",
+      plate: { en: "3D works", zh: "3D 作品" },
+      title: { en: "3D works and games", zh: "3D 作品與遊戲" },
+      line: {
+        en: "Worlds built for the browser: a surf break, a wooden settlement and a sea in a bottle.",
+        zh: "為瀏覽器打造的小世界：一道浪、一座木造聚落、一片瓶中的海。"
+      },
+      doors: [
+        {
+          id: "sunshore",
+          kind: "demo",
+          paint: "#3F6D93",
+          plate: { en: "Sunshore", zh: "逐浪小島" },
+          title: { en: "Sunshore", zh: "逐浪小島" },
+          context: { en: "Personal project, October 2026.", zh: "個人專案，2026 年 10 月。" },
+          lede: {
+            en: "A third-person surfing game that runs in the browser.",
+            zh: "在瀏覽器裡玩的第三人稱衝浪小遊戲。"
+          },
+          problem: {
+            en: "Make surfing feel right on a keyboard: speed has to come from the wave, not from a button.",
+            zh: "讓鍵盤也能衝出手感：速度要來自浪，而不是來自按鍵。"
+          },
+          method: {
+            en: "A and D carve while keeping the forward glide, W presses the board down for speed, Shift spends energy on a burst that recovers as you ride and carve, and Space jumps off the wave and lands back on its face. There is no countdown.",
+            zh: "A／D 左右切浪並保留向前慣性，W 壓板、降低重心加速，Shift 消耗能量爆發加速、滑行與切浪時回復，Space 跳浪再落回浪面。沒有倒數。"
+          },
+          result: {
+            en: "You set off straight from the south bay break, with a third-person camera you can turn and pull back.",
+            zh: "從南灣浪線直接踩板出發，第三人稱鏡頭可以轉動、也可以拉遠。"
+          },
+          tags: ["three.js", "WebGL", "Browser game"],
+          demo: "https://rolanthhuang.github.io/surfingisland/",
+          repo: "surfingisland",
+          updated: "2026-10-15",
+          image: "assets/img/sunshore",
+          focus: "50% 62%"
+        },
+        {
+          id: "woodweave",
+          kind: "demo",
+          paint: "#7A5230",
+          plate: { en: "Woodweave", zh: "木序" },
+          title: { en: "Woodweave", zh: "木序" },
+          context: { en: "Personal project, October 2026.", zh: "個人專案，2026 年 10 月。" },
+          lede: {
+            en: "A wooden settlement of up to 540 rooms, stacked in nine diagonal tiers.",
+            zh: "最多 540 間房、九層斜向堆疊的木造聚落。"
+          },
+          problem: {
+            en: "Keep hundreds of furnished rooms readable and smooth in one browser scene.",
+            zh: "讓上百間有家具的房間，在同一個瀏覽器場景裡看得清楚、也跑得順。"
+          },
+          method: {
+            en: "Wooden rooms with four, five or six faces are stacked in nine tiers, widest in the middle: 12, 30, 60, 96, 132, 96, 60, 36 and 18. The settlement grows outward from 36 to 540 rooms, and every room gets its own furniture and its own installation.",
+            zh: "四、五、六面體的木質房間分九層堆疊，中段最多、上下收窄：12／30／60／96／132／96／60／36／18。聚落可從 36 間向外生長到 540 間，每間房都有自己的家具組合與專屬裝置。"
+          },
+          result: {
+            en: "Atelier 05 refines the close-up craft: wood grain, wool felt, joinery, stitched seams and draped fabric. Each round is checked against recorded performance tests.",
+            zh: "Atelier 05 精修近看細節：木紋、羊毛氈、木作接合、立體縫邊與垂墜織物；每一輪都有效能測試紀錄。"
+          },
+          tags: ["three.js", "WebGL", "Procedural layout", "Performance"],
+          demo: "https://rolanthhuang.github.io/WOODWEAVE/",
+          repo: "Woodweave",
+          updated: "2026-10-15",
+          image: "assets/img/woodweave",
+          focus: "50% 50%"
+        },
+        {
+          id: "ship-in-bottle",
+          kind: "demo",
+          paint: "#6D1F2B",
+          plate: { en: "Ship in Bottle", zh: "瓶中船" },
+          title: { en: "Ship in a bottle", zh: "拾光號 · 瓶中遠方" },
+          context: { en: "Personal project, October 2026.", zh: "個人專案，2026 年 10 月。" },
+          lede: {
+            en: "A schooner, a lighthouse and a small sea, sealed in a green glass bottle in 1887.",
+            zh: "一艘雙桅帆船、一座燈塔和一小片海，在 1887 年封進綠色玻璃瓶。"
+          },
+          problem: {
+            en: "Make one small object worth turning over in your hands: glass, water, light and craft at desk scale.",
+            zh: "做一個值得拿在手上翻看的小物件：桌面尺度的玻璃、水、光與工藝。"
+          },
+          method: {
+            en: "A real-time WebGL 2 scene. Orbit and zoom the bottle, focus on details, shake the sea, and turn the wind from calm to storm and the light from dawn to night.",
+            zh: "即時 WebGL 2 場景：可以環繞、縮放瓶子，聚焦細節、搖晃海面，把風從無風調到暴風，光線從清晨調到夜晚。"
+          },
+          result: {
+            en: "You can engrave your own line on the brass plaque, take photos, and turn on the sound of the sea.",
+            zh: "可以在銅牌刻上自己的字、拍照，也可以打開海的聲音。"
+          },
+          tags: ["three.js", "WebGL 2", "Materials", "Interaction design"],
+          demo: "https://rolanthhuang.github.io/ShipInBottle/",
+          repo: "ShipInBottle",
+          updated: "2026-10-18",
+          image: "assets/img/ship",
+          focus: "55% 55%"
+        }
+      ]
     }
   ],
+
+  /* The photographic hall: which repositories fill the four plaques when fewer than four are pinned,
+     and which project each room in the photograph was painted for. */
+  hall: {
+    defaults: ["Binance_Trading_Volume_3D_Terrain_Diagram", "surfingisland", "Woodweave", "ShipInBottle"],
+    painted: ["Binance_Trading_Volume_3D_Terrain_Diagram", "surfingisland", "Woodweave", "ShipInBottle"]
+  },
 
   who: {
     paint: "#E3D7BC",
