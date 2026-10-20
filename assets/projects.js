@@ -47,7 +47,7 @@ window.SITE = {
       doors: [
         {
           id: "payment-platform",
-          kind: "case",
+          kind: "demo",
           paint: "#6F2222",
           plate: { en: "Two-stage detection", zh: "兩階段偵測" },
           title: { en: "Two-stage anomaly detection at a payment platform", zh: "支付平台的兩階段異常偵測" },
@@ -56,8 +56,8 @@ window.SITE = {
             zh: "LDR 大型線上支付與交易平台，資深數據分析師 / ML 工程師（遠端），2025 年 10 月至 2026 年 1 月。"
           },
           lede: {
-            en: "The production system stays with the client, so this door stays locked. The plaque says what it did.",
-            zh: "正式系統屬於客戶，所以這扇門維持上鎖。門上的銘牌記錄它做了什麼。"
+            en: "The full detection pipeline, replayed on simulated data: open the replay, the dashboard or the complete working materials.",
+            zh: "完整的偵測流程，以模擬資料重播：可以開回放、儀表板，或完整的工作資料。"
           },
           problem: {
             en: "Fake traffic, bots, proxy or spoofed devices and coordinated accounts, at production volume, with manual review as the bottleneck.",
@@ -72,8 +72,16 @@ window.SITE = {
             zh: "第一階段流程層級 Recall 80%+；第二階段在 production-labeled data 上達到 Recall 90%+、Precision 70%+。模型分數與規則接入即時決策，降低人工審查負擔與不必要的誤判。"
           },
           tags: ["Python", "SQL", "Time series", "Hurst exponent", "Spike detection", "XGBoost", "CatBoost", "k-means", "Graph analysis"],
-          next: "hurst-spike",
-          archive: "https://www.dropbox.com/scl/fo/79dsnbmjs8pt1pm5hc9o9/AIxSXyfTG-m6CNhUq_2Gr50?rlkey=fe3qs7ngho3b83cgygbzayn5g&st=qtawt5tj&dl=0"
+          data: { en: "Simulated data", zh: "模擬資料" },
+          demo: "https://rolanthhuang.github.io/hurst-spike-risk-demo/web/hurst-spike-replay.html",
+          more: [
+            { label: { en: "Static dashboard", zh: "靜態分析版" }, url: "https://rolanthhuang.github.io/hurst-spike-risk-demo/web/hurst-exponent-dashboard.html" },
+            { label: { en: "Complete working materials (Dropbox)", zh: "完整工作資料（Dropbox）" }, url: "https://www.dropbox.com/scl/fo/79dsnbmjs8pt1pm5hc9o9/AIxSXyfTG-m6CNhUq_2Gr50?rlkey=fe3qs7ngho3b83cgygbzayn5g&st=qtawt5tj&dl=0" }
+          ],
+          repo: "hurst-spike-risk-demo",
+          updated: "2026-08-28",
+          image: "assets/img/hurst",
+          focus: "27% 55%"
         },
         {
           id: "hurst-spike",
@@ -125,7 +133,7 @@ window.SITE = {
       doors: [
         {
           id: "platform-risk",
-          kind: "case",
+          kind: "demo",
           paint: "#2C4566",
           plate: { en: "Multi-platform control", zh: "跨平台風控" },
           title: { en: "Real-time risk control across many platforms", zh: "跨平台即時風控系統" },
@@ -134,8 +142,8 @@ window.SITE = {
             zh: "2018 至 2023 年間約 4.5 年，在台北、台中的線上平台擔任風控系統設計與演算法工程師（近端、遠端、混合）。"
           },
           lede: {
-            en: "These systems belong to the companies that run them, so this door stays locked. The plaque says what they did.",
-            zh: "這些系統屬於營運它們的公司，所以這扇門維持上鎖。門上的銘牌記錄它們做了什麼。"
+            en: "The risk control framework, run on simulated results: open the live simulator, the step-by-step autopsy of one decision cycle, or the complete working materials.",
+            zh: "風控框架以模擬結果實際運行：可以開即時模擬器、單一決策週期的逐關拆解，或完整的工作資料。"
           },
           problem: {
             en: "Keep platforms stable and profitable while users act strategically, coordinate with each other and hunt for loopholes across platforms.",
@@ -150,8 +158,16 @@ window.SITE = {
             zh: "完成單平台與跨平台的收益風險控制流程，內部設計與驗證流程供數十個平台與商戶使用；人工監控需求降到接近零，管理層有可即時操作的決策視圖。期間完成上百個中小型 Sprint。"
           },
           tags: ["Game theory", "k-means", "Expansion trees", "Probabilistic modeling", "Python", "Go"],
-          next: "balancing",
-          archive: "https://www.dropbox.com/scl/fo/bbqcu8bydudmingg61rkw/AIO8SNby0HozL2r--bJvTzg?rlkey=b3o601ut4iuaxniwyga8lvmdj&st=lzz86dq4&dl=0"
+          data: { en: "Simulated results", zh: "模擬成果" },
+          demo: "https://rolanthhuang.github.io/realtime-multi-customer-balancing/outputs/profit_control_realtime.html",
+          more: [
+            { label: { en: "Decision system autopsy", zh: "決策系統逐關拆解" }, url: "https://rolanthhuang.github.io/realtime-multi-customer-balancing/outputs/algorithm-autopsy.html" },
+            { label: { en: "Complete working materials (Dropbox)", zh: "完整工作資料（Dropbox）" }, url: "https://www.dropbox.com/scl/fo/bbqcu8bydudmingg61rkw/AIO8SNby0HozL2r--bJvTzg?rlkey=b3o601ut4iuaxniwyga8lvmdj&st=lzz86dq4&dl=0" }
+          ],
+          repo: "realtime-multi-customer-balancing",
+          updated: "2026-09-14",
+          image: "assets/img/balancing",
+          focus: "74% 66%"
         },
         {
           id: "balancing",
