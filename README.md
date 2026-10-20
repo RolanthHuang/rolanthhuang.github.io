@@ -33,7 +33,7 @@ The four brass plaques follow the repositories pinned on your GitHub profile:
 1. Pin up to six repositories on your profile (Customize your pins).
 2. `.github/workflows/pinned-doors.yml` reads them every six hours and writes `assets/pinned.json`. Run it by hand from the Actions tab to update at once.
 3. The hall engraves their names on the plaques. A project that has its own page here opens that page; any other repository opens on GitHub.
-4. The rooms were painted for Binance 3D, Sunshore, Woodweave and Ship in Bottle. A different project behind a door gets a framed picture of itself in that room (its screenshot from `assets/img/`, or the repository's custom social preview).
+4. Each of the four doors has a gilt frame inside showing that project's picture (its screenshot from `assets/img/`, the repository's custom social preview, or a painted title card). Stepping through the door leads into a room (`assets/hall/room-*.jpg`) where the picture hangs large: click it to open the demo, or go through the far door to the project's own page.
 5. Fewer than four pins: the empty doors use `SITE.hall.defaults` in `assets/projects.js`. Pins five and six are listed behind the All projects door.
 
 If the workflow can't read your pins with the built-in token, add a personal access token (no scopes needed) as the repository secret `PINS_TOKEN`.

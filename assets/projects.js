@@ -410,11 +410,9 @@ window.SITE = {
     }
   ],
 
-  /* The photographic hall: which repositories fill the four plaques when fewer than four are pinned,
-     and which project each room in the photograph was painted for. */
+  /* The photographic hall: which repositories fill the four doors when fewer than four are pinned. */
   hall: {
-    defaults: ["Binance_Trading_Volume_3D_Terrain_Diagram", "surfingisland", "Woodweave", "ShipInBottle"],
-    painted: ["Binance_Trading_Volume_3D_Terrain_Diagram", "surfingisland", "Woodweave", "ShipInBottle"]
+    defaults: ["Binance_Trading_Volume_3D_Terrain_Diagram", "surfingisland", "Woodweave", "ShipInBottle"]
   },
 
   who: {

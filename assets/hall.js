@@ -1,8 +1,10 @@
 /* The photographic hall of doors.
-   One photograph drawn with WebGL 2: a depth map gives it parallax when you look around or walk,
-   door masks light up the door you choose, and the brass plaques are engraved live with the
-   names of the repositories pinned on GitHub (assets/pinned.json). If a door's project changes,
-   a picture of the new project is hung inside that room, so the room still matches its plaque. */
+   Two kinds of scene drawn with WebGL 2 from photographs:
+   - the hall: a depth map gives it parallax when you look around or walk, door masks light up the
+     door you choose, the brass plaques are engraved live with the names of the repositories pinned
+     on GitHub (assets/pinned.json), and each door's frame shows that project's picture;
+   - a room behind each of the first four doors: the project hangs large on the back wall, and a
+     far door leads on to the project's own page. */
 (function () {
   "use strict";
 
@@ -10,36 +12,48 @@
   const IMG_W = 1672, IMG_H = 941, IA = IMG_W / IMG_H, OVER = 0.94;
   const BASE = "assets/hall/";
 
-  /* Where things are in the photograph, in its own pixels. */
+  /* Where things are in the hall photograph, in its own pixels.
+     plate: where the name is engraved; frame: the dark canvas inside the gilt frame behind the door. */
   const SLOTS = [
-    { focus: [219, 420], hit: [[95, 72], [345, 72], [345, 612], [95, 612]],
-      quad: [[163.1, 170.4], [270.9, 193.6], [271.4, 214.1], [162.6, 191.9]],
-      cover: { quad: [[186, 376], [281, 371], [282, 500], [186, 502]], framed: true } },
-    { focus: [500, 448], hit: [[398, 132], [630, 132], [630, 610], [398, 610]],
-      quad: [[464.1, 226.8], [561.5, 232.8], [563.7, 252.0], [463.7, 245.4]],
-      cover: { quad: [[452, 454], [510, 454], [510, 500], [452, 500]], framed: true } },
-    { focus: [820, 447], hit: [[668, 150], [925, 150], [925, 640], [668, 640]],
-      quad: [[748.2, 215.5], [849.6, 210.7], [850.0, 226.5], [747.2, 233.3]] },
-    { focus: [1100, 463], hit: [[962, 140], [1218, 140], [1218, 668], [962, 668]],
-      quad: [[1024.8, 205.5], [1138.4, 191.9], [1138.9, 214.7], [1024.9, 228.9]],
-      cover: { quad: [[1082, 440], [1172, 436], [1173, 522], [1082, 524]], framed: true } },
-    { focus: [1330, 496], hit: [[1222, 178], [1400, 178], [1400, 705], [1222, 705]],
-      quad: [[1277.4, 249.1], [1367.8, 237.7], [1368.8, 257.4], [1277.0, 267.8]] },
-    { focus: [1580, 440], hit: [[1448, 130], [1668, 130], [1668, 648], [1448, 648]],
-      quad: [[1477.5, 178.0], [1608.3, 154.4], [1607.8, 176.0], [1477.4, 199.6]] }
+    { focus: [218, 420], hit: [[95, 80], [345, 80], [345, 612], [95, 612]],
+      plate: [[165.5, 168.2], [269.5, 191.1], [269.5, 212.3], [165.5, 190.5]],
+      frame: [[188, 373], [240, 375], [240, 421], [187, 420]], room: "green" },
+    { focus: [490, 430], hit: [[400, 140], [630, 140], [630, 612], [400, 612]],
+      plate: [[461.4, 223.9], [564.6, 232.5], [564.6, 251.1], [461.4, 242.5]],
+      frame: [[452, 381], [517, 383], [517, 430], [452, 428]], room: "blue" },
+    { focus: [830, 440], hit: [[680, 165], [935, 165], [935, 632], [680, 632]],
+      plate: [[741.2, 211.1], [853.8, 208.4], [853.8, 227.3], [741.2, 233.2]],
+      frame: [[826, 402], [879, 401], [879, 441], [826, 442]], room: "oak" },
+    { focus: [1100, 440], hit: [[960, 110], [1220, 110], [1220, 670], [960, 670]],
+      plate: [[1022.4, 207.8], [1137.6, 191.0], [1137.6, 214.6], [1022.4, 229.7]],
+      frame: [[1074, 374], [1147, 369], [1149, 426], [1074, 430]], room: "red" },
+    { focus: [1330, 470], hit: [[1222, 200], [1405, 200], [1405, 700], [1222, 700]],
+      plate: [[1275.6, 247.8], [1369.4, 235.8], [1369.4, 253.3], [1275.6, 268.0]] },
+    { focus: [1570, 430], hit: [[1440, 40], [1672, 40], [1672, 690], [1440, 690]],
+      plate: [[1475.8, 176.6], [1609.2, 153.2], [1609.2, 175.6], [1475.8, 199.6]] }
   ];
-  const COVER_SLOTS = [0, 1, 3];
+
+  /* The rooms behind the first four doors: the canvas on the back wall and the far doorway. */
+  const ROOMS = {
+    green: { src: "room-green.jpg", canvas: [[669, 181], [1084, 181], [1085, 428], [668, 428]], far: [[105, 110], [470, 110], [470, 690], [105, 690]], farFocus: [290, 440] },
+    blue: { src: "room-blue.jpg", canvas: [[676, 191], [1119, 186], [1123, 451], [680, 455]], far: [[95, 120], [490, 120], [490, 690], [95, 690]], farFocus: [370, 430] },
+    oak: { src: "room-oak.jpg", canvas: [[543, 186], [1019, 185], [1026, 467], [536, 468]], far: [[1235, 130], [1610, 130], [1610, 700], [1235, 700]], farFocus: [1360, 440] },
+    red: { src: "room-red.jpg", canvas: [[589, 140], [1072, 139], [1072, 405], [589, 405]], far: [[1310, 150], [1600, 150], [1600, 690], [1310, 690]], farFocus: [1530, 430] }
+  };
 
   const L = {
     introTitle: { en: "The hall of doors", zh: "門廳" },
     introSub: { en: "Four doors follow my pinned GitHub repositories", zh: "四扇門跟著我在 GitHub 釘選的 repo" },
-    introLine: { en: "Walk up to a door and step inside. Behind each door is another room, and usually another door.", zh: "走到門前，走進去。每扇門後都有另一個房間，通常還有另一扇門。" },
+    introLine: { en: "Walk up to a door and step inside. Behind each door is another room, and another door.", zh: "走到門前，走進去。每扇門後都有另一個房間，和另一扇門。" },
     touch: { en: "Drag to look around. Tap a door to choose it, tap it again to go in.", zh: "拖曳環顧四周。點一下門選取，再點一下走進去。" },
     steps: { en: "<kbd>W</kbd> <kbd>S</kbd> walk &nbsp; <kbd>A</kbd> <kbd>D</kbd> choose a door &nbsp; <kbd>Enter</kbd> step inside", zh: "<kbd>W</kbd> <kbd>S</kbd> 前後走 &nbsp; <kbd>A</kbd> <kbd>D</kbd> 選門 &nbsp; <kbd>Enter</kbd> 走進去" },
+    roomSteps: { en: "Click the painting to open the demo, or the far door to read how it was built. <kbd>Esc</kbd> back to the hall", zh: "點畫開啟 demo，點遠處的門看完整介紹。<kbd>Esc</kbd> 回到門廳" },
+    roomTouch: { en: "Tap the painting to open the demo, or the far door for the full write-up.", zh: "點畫開啟 demo，點遠處的門看完整介紹。" },
     hint: { en: "or scroll to walk, drag to look around, click a door", zh: "或滾輪前後走，拖曳環顧，點門走進去" },
     step: { en: "Step inside", zh: "走進去" },
     demo: { en: "Open the demo", zh: "開啟 demo" },
     site: { en: "Open the project", zh: "開啟專案" },
+    readMore: { en: "Through the far door", zh: "穿過遠處的門" },
     github: { en: "GitHub", zh: "GitHub" },
     reset: { en: "Reset view", zh: "重設視角" },
     loading: { en: "Lighting the lamps…", zh: "正在點燈…" },
@@ -71,6 +85,8 @@
   const user = SITE.person.githubUser;
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
   const ext = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9 2h5v5M14 2 7.5 8.5M12 9.5V14H2V4h4.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+  const toUv = p => [p[0] / IMG_W, 1 - p[1] / IMG_H];
+  const center = q => [q.reduce((a, p) => a + p[0], 0) / q.length, q.reduce((a, p) => a + p[1], 0) / q.length];
 
   function quadSize(q) {
     return [(dist(q[0], q[1]) + dist(q[3], q[2])) / 2, (dist(q[0], q[3]) + dist(q[1], q[2])) / 2];
@@ -85,7 +101,7 @@
     }
     return M.map((r, i) => r[n] / r[i]);
   }
-  /* Maps a quad in the photograph onto the unit square; returned column-major for a GLSL mat3. */
+  /* Maps a quad in the photograph onto the unit square; column-major for a GLSL mat3. */
   function homography(src) {
     const dst = [[0, 0], [1, 0], [1, 1], [0, 1]], A = [], b = [];
     for (let i = 0; i < 4; i++) {
@@ -119,38 +135,29 @@
     return null;
   }
   function assignSlots(pins) {
-    const painted = SITE.hall.painted.map(x => x.toLowerCase());
-    const slots = [null, null, null, null], used = new Set();
-    const list = pins.map(p => p.repo).filter(Boolean);
-    const take = (i, r) => { slots[i] = r; used.add(r.toLowerCase()); };
-    // a pinned repository that a room was painted for goes behind that door
-    list.forEach(r => { const i = painted.indexOf(r.toLowerCase()); if (i >= 0 && !slots[i] && !used.has(r.toLowerCase())) take(i, r); });
-    // the other pinned repositories take the free doors in pin order
-    const order = [2, 0, 3, 1];
-    list.forEach(r => { if (used.has(r.toLowerCase())) return; const i = order.find(k => !slots[k]); if (i != null) take(i, r); });
-    // doors nobody pinned keep their default project
-    SITE.hall.defaults.forEach((r, i) => { if (!slots[i] && !used.has(r.toLowerCase())) take(i, r); });
-    for (let i = 0; i < 4; i++) if (!slots[i]) { const r = SITE.hall.defaults.find(d => !used.has(d.toLowerCase())); if (r) take(i, r); }
-    const extra = list.filter(r => !used.has(r.toLowerCase()));
+    const slots = [], used = new Set();
+    pins.map(p => p.repo).filter(Boolean).forEach(r => {
+      if (slots.length < 4 && !used.has(r.toLowerCase())) { slots.push(r); used.add(r.toLowerCase()); }
+    });
+    for (const r of SITE.hall.defaults) { if (slots.length >= 4) break; if (!used.has(r.toLowerCase())) { slots.push(r); used.add(r.toLowerCase()); } }
+    const extra = pins.map(p => p.repo).filter(r => r && !used.has(r.toLowerCase()));
     return { slots, extra };
   }
   function buildDoors(data) {
     const pins = (data && Array.isArray(data.pinned) ? data.pinned : []).filter(p => p && p.repo);
     const byRepo = {}; pins.forEach(p => { byRepo[p.repo.toLowerCase()] = p; });
     const { slots, extra } = assignSlots(pins);
-    const painted = SITE.hall.painted.map(x => x.toLowerCase());
-    const doors = slots.map((repo, i) => {
+    const doors = slots.map(repo => {
       const hit = findDoor(repo), pin = byRepo[String(repo).toLowerCase()] || {};
       const url = pin.url || `https://github.com/${user}/${repo}`;
-      const base = { repo, painted: String(repo).toLowerCase() === painted[i], pinned: !!byRepo[String(repo).toLowerCase()] };
       if (hit) {
         const d = hit.door;
-        return { ...base, plate: d.hall || d.plate, title: d.title, sub: hit.room.title, line: d.lede, target: `#/${hit.room.id}/${d.id}`,
-          image: d.image ? d.image + ".jpg" : pin.preview || "", links: [[L.demo, d.demo || pin.homepage || url], [L.github, url]] };
+        return { repo, plate: d.hall || d.plate, title: d.title, sub: hit.room.title, line: d.lede, target: `#/${hit.room.id}/${d.id}`,
+          image: d.image ? d.image + ".jpg" : pin.preview || "", demo: d.demo || pin.homepage || url, github: url };
       }
       const name = pin.name || pretty(repo);
-      return { ...base, plate: name, title: name, sub: L.pinned, line: pin.description || "", target: null, image: pin.preview || "",
-        links: [[pin.homepage ? L.site : L.github, pin.homepage || url], ...(pin.homepage ? [[L.github, url]] : [])] };
+      return { repo, plate: name, title: name, sub: L.pinned, line: pin.description || "", target: null,
+        image: pin.preview || "", demo: pin.homepage || url, github: url, noDemo: !pin.homepage };
     });
     const extraNames = extra.map(r => { const h = findDoor(r); return h ? t(h.door.plate) : pretty(r); });
     doors.push({ plate: L.plateAbout, title: L.aboutTitle, sub: SITE.person.title, line: L.aboutLine, target: "#/who",
@@ -159,7 +166,7 @@
       line: { en: L.allLine.en + (extraNames.length ? " " + L.alsoPinned.en + extraNames.join(", ") + "." : ""),
               zh: L.allLine.zh + (extraNames.length ? L.alsoPinned.zh + extraNames.join("、") + "。" : "") },
       links: [[L.profile, SITE.person.github]] });
-    return doors.map((d, i) => ({ ...d, slot: i, uv: [SLOTS[i].focus[0] / IMG_W, 1 - SLOTS[i].focus[1] / IMG_H] }));
+    return doors.map((d, i) => ({ ...d, slot: i, uv: toUv(SLOTS[i].focus) }));
   }
 
   /* ---------- WebGL ---------- */
@@ -169,37 +176,29 @@
   const FS = `#version 300 es
   precision highp float;
   in vec2 vUv; out vec4 frag;
-  uniform sampler2D uImg, uDepth, uMaskA, uMaskB, uAtlas, uCv0, uCv1, uCv2;
+  uniform sampler2D uImg, uDepth, uMaskA, uMaskB, uAtlas, uCv0, uCv1, uCv2, uCv3;
   uniform vec2 uRes, uPan, uPar, uFocus, uImgPx;
-  uniform float uIA, uZoom, uOver, uTime, uFade, uAny, uEngrave;
-  uniform vec3 uGA, uGB, uCOn;
+  uniform float uIA, uZoom, uOver, uTime, uFade, uAny, uEngrave, uCvLight, uMasks;
+  uniform vec3 uGA, uGB;
+  uniform vec4 uCOn;
   uniform mat3 uPH[6];
   uniform vec4 uPBox[6];
   uniform vec2 uPRow[6];
-  uniform mat3 uCH[3];
-  uniform vec4 uCBox[3];
-  uniform vec4 uCFit[3];
+  uniform mat3 uCH[4];
+  uniform vec4 uCBox[4];
+  uniform vec2 uCFit[4];
   float dep(vec2 s){ return texture(uDepth, s).r; }
-  vec3 hang(vec3 c, vec2 px, mat3 H, vec4 box, vec4 fit, sampler2D tex, float on, float light){
+  vec3 hang(vec3 c, vec2 px, mat3 H, vec4 box, vec2 fit, sampler2D tex, float on){
     if (on < 0.002) return c;
     if (px.x < box.x || px.y < box.y || px.x > box.z || px.y > box.w) return c;
     vec3 h = H * vec3(px, 1.0); vec2 u = h.xy / h.z;
-    float outside = max(max(-u.x, u.x - 1.0), max(-u.y, u.y - 1.0));
-    vec2 tu = vec2(0.5) + (vec2(u.x, 1.0 - u.y) - 0.5) * fit.xy;
-    if (fit.w < 0.5) {
-      if (outside > 0.0) return c;
-      float edge = smoothstep(0.0, 0.07, min(min(u.x, 1.0 - u.x), min(u.y, 1.0 - u.y)));
-      vec3 pic = texture(tex, tu).rgb * vec3(0.86, 0.93, 1.04) * (0.6 + 0.4 * light);
-      return mix(c, pic, on * edge * 0.94);
-    }
-    if (outside > 0.0) return mix(c, c * (0.55 + 0.45 * smoothstep(0.0, 0.07, outside)), on);
-    float bu = 0.085, bv = 0.085 * fit.z;
-    float d = min(min(u.x / bu, (1.0 - u.x) / bu), min(u.y / bv, (1.0 - u.y) / bv));
-    vec3 pic = pow(texture(tex, tu).rgb, vec3(1.12)) * vec3(0.95, 0.85, 0.7) * light * 0.88;
-    pic *= 0.72 + 0.28 * smoothstep(1.0, 1.9, d);
-    float bevel = clamp(1.0 - abs(d - 0.5) * 1.7, 0.0, 1.0);
-    vec3 gold = mix(vec3(0.36, 0.24, 0.08), vec3(0.96, 0.78, 0.44), bevel) * light * 1.12;
-    return mix(c, d < 1.0 ? gold : pic, on);
+    if (u.x < 0.0 || u.y < 0.0 || u.x > 1.0 || u.y > 1.0) return c;
+    vec2 tu = vec2(0.5) + (vec2(u.x, 1.0 - u.y) - 0.5) * fit;
+    vec3 pic = pow(texture(tex, tu).rgb, vec3(1.1)) * vec3(1.0, 0.93, 0.82) * uCvLight;
+    float e = min(min(u.x, 1.0 - u.x), min(u.y * 1.3, (1.0 - u.y) * 1.3));
+    pic *= 0.55 + 0.45 * smoothstep(0.0, 0.05, e);
+    pic += vec3(1.0, 0.92, 0.75) * 0.05 * smoothstep(0.6, 0.0, length(u - vec2(0.5, -0.1)));
+    return mix(c, pic, on);
   }
   void main(){
     float va = uRes.x / uRes.y;
@@ -216,23 +215,25 @@
     s = clamp(s, vec2(0.001), vec2(0.999));
     vec3 c = texture(uImg, s).rgb;
     vec2 px = vec2(s.x * uImgPx.x, (1.0 - s.y) * uImgPx.y);
-    float light = clamp(dot(textureLod(uImg, s, 5.0).rgb, vec3(0.3, 0.59, 0.11)) * 2.4, 0.4, 1.15);
-    c = hang(c, px, uCH[0], uCBox[0], uCFit[0], uCv0, uCOn.x, light);
-    c = hang(c, px, uCH[1], uCBox[1], uCFit[1], uCv1, uCOn.y, light);
-    c = hang(c, px, uCH[2], uCBox[2], uCFit[2], uCv2, uCOn.z, light);
-    for (int i = 0; i < 6; i++) {
-      vec4 b = uPBox[i];
-      if (px.x < b.x || px.y < b.y || px.x > b.z || px.y > b.w) continue;
-      vec3 h = uPH[i] * vec3(px, 1.0);
-      vec2 pu = h.xy / h.z;
-      if (pu.x < 0.0 || pu.y < 0.0 || pu.x > 1.0 || pu.y > 1.0) continue;
-      vec2 au = vec2(pu.x, 1.0 - mix(uPRow[i].x, uPRow[i].y, pu.y));
-      float a = texture(uAtlas, au).a * uEngrave;
-      float lip = texture(uAtlas, au + vec2(-0.0012, 0.0035)).a * uEngrave;
-      c = mix(c, c * 0.1 + vec3(0.02, 0.012, 0.004), a * 0.96);
-      c += vec3(1.0, 0.85, 0.58) * max(0.0, lip - a) * 0.2;
+    c = hang(c, px, uCH[0], uCBox[0], uCFit[0], uCv0, uCOn.x);
+    c = hang(c, px, uCH[1], uCBox[1], uCFit[1], uCv1, uCOn.y);
+    c = hang(c, px, uCH[2], uCBox[2], uCFit[2], uCv2, uCOn.z);
+    c = hang(c, px, uCH[3], uCBox[3], uCFit[3], uCv3, uCOn.w);
+    if (uEngrave > 0.002) {
+      for (int i = 0; i < 6; i++) {
+        vec4 b = uPBox[i];
+        if (px.x < b.x || px.y < b.y || px.x > b.z || px.y > b.w) continue;
+        vec3 h = uPH[i] * vec3(px, 1.0);
+        vec2 pu = h.xy / h.z;
+        if (pu.x < 0.0 || pu.y < 0.0 || pu.x > 1.0 || pu.y > 1.0) continue;
+        vec2 au = vec2(pu.x, 1.0 - mix(uPRow[i].x, uPRow[i].y, pu.y));
+        float a = texture(uAtlas, au).a * uEngrave;
+        float lip = texture(uAtlas, au + vec2(-0.0012, 0.0035)).a * uEngrave;
+        c = mix(c, c * 0.1 + vec3(0.02, 0.012, 0.004), a * 0.96);
+        c += vec3(1.0, 0.85, 0.58) * max(0.0, lip - a) * 0.2;
+      }
     }
-    float g = dot(texture(uMaskA, s).rgb, uGA) + dot(texture(uMaskB, s).rgb, uGB);
+    float g = (dot(texture(uMaskA, s).rgb, uGA) + dot(texture(uMaskB, s).rgb, uGB)) * uMasks;
     float lum = dot(c, vec3(0.3, 0.59, 0.11));
     c *= 1.0 + 0.03 * sin(uTime * 7.3 + s.x * 41.0) * sin(uTime * 3.1 + s.y * 23.0) * smoothstep(0.55, 0.95, lum);
     c *= 1.0 - 0.24 * uAny * (1.0 - g);
@@ -243,9 +244,10 @@
     frag = vec4(c, 1.0);
   }`;
 
-  let canvas = null, gl = null, prog = null, U = {}, ready = null, failed = false;
-  let depthCPU = null, DW = 0, DH = 0;
+  let canvas = null, gl = null, prog = null, U = {}, ready = null, failed = false, loaded = false;
+  let hallDepth = null, DW = 0, DH = 0;
   const texUnits = {};
+  /* texture units: 0 hall, 1 hall depth, 2-3 masks, 4 plaque atlas, 5-8 hall frames, 9 room, 10 flat depth, 11 room picture */
 
   function getGL() {
     if (gl || failed) return gl;
@@ -266,12 +268,12 @@
     const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
     const loc = gl.getAttribLocation(prog, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    ["uImg", "uDepth", "uMaskA", "uMaskB", "uAtlas", "uCv0", "uCv1", "uCv2", "uRes", "uPan", "uPar", "uFocus", "uImgPx", "uIA", "uZoom", "uOver", "uTime",
-     "uFade", "uAny", "uEngrave", "uGA", "uGB", "uCOn", "uPH", "uPBox", "uPRow", "uCH", "uCBox", "uCFit"].forEach(n => { U[n] = gl.getUniformLocation(prog, n); });
+    ["uImg", "uDepth", "uMaskA", "uMaskB", "uAtlas", "uCv0", "uCv1", "uCv2", "uCv3", "uRes", "uPan", "uPar", "uFocus", "uImgPx", "uIA", "uZoom", "uOver", "uTime",
+     "uFade", "uAny", "uEngrave", "uCvLight", "uMasks", "uGA", "uGB", "uCOn", "uPH", "uPBox", "uPRow", "uCH", "uCBox", "uCFit"].forEach(n => { U[n] = gl.getUniformLocation(prog, n); });
   }
   function upload(unit, source, mip = true) {
     let tex = texUnits[unit];
-    if (!tex) { tex = texUnits[unit] = gl.createTexture(); }
+    if (!tex) tex = texUnits[unit] = gl.createTexture();
     gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, tex);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
@@ -281,25 +283,27 @@
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   }
-  function blank(unit) {
+  function solid(unit, v) {
     const c = document.createElement("canvas"); c.width = c.height = 2;
+    const g = c.getContext("2d"); g.fillStyle = `rgb(${v},${v},${v})`; g.fillRect(0, 0, 2, 2);
     upload(unit, c, false);
   }
 
-  let pinsData = null, loaded = false;
+  let pinsData = null;
   function init() {
     if (ready) return ready;
     ready = (async () => {
       compile();
-      [4, 5, 6, 7].forEach(blank);
+      [4, 5, 6, 7, 8, 9, 11].forEach(u => solid(u, 0));
+      solid(10, 140);
       const [img, dep, ma, mb] = await Promise.all(["hall.jpg", "depth.png", "maskA.png", "maskB.png"].map(f => loadImg(BASE + f)));
       upload(0, img); upload(1, dep); upload(2, ma); upload(3, mb);
-      [["uImg", 0], ["uDepth", 1], ["uMaskA", 2], ["uMaskB", 3], ["uAtlas", 4], ["uCv0", 5], ["uCv1", 6], ["uCv2", 7]].forEach(([n, u]) => gl.uniform1i(U[n], u));
+      [["uMaskA", 2], ["uMaskB", 3], ["uAtlas", 4], ["uCv0", 5], ["uCv1", 6], ["uCv2", 7], ["uCv3", 8]].forEach(([n, u]) => gl.uniform1i(U[n], u));
       gl.uniform1f(U.uIA, IA); gl.uniform1f(U.uOver, OVER); gl.uniform2f(U.uImgPx, IMG_W, IMG_H);
       const c = document.createElement("canvas"); DW = c.width = dep.naturalWidth; DH = c.height = dep.naturalHeight;
       const g = c.getContext("2d"); g.drawImage(dep, 0, 0);
-      const px = g.getImageData(0, 0, DW, DH).data; depthCPU = new Uint8Array(DW * DH);
-      for (let i = 0; i < DW * DH; i++) depthCPU[i] = px[i * 4];
+      const px = g.getImageData(0, 0, DW, DH).data; hallDepth = new Uint8Array(DW * DH);
+      for (let i = 0; i < DW * DH; i++) hallDepth[i] = px[i * 4];
       pinsData = await fetch("assets/pinned.json", { cache: "no-cache" }).then(r => (r.ok ? r.json() : null)).catch(() => null);
       loaded = true;
     })();
@@ -309,14 +313,14 @@
 
   /* ---------- engraving ---------- */
   const atlas = document.createElement("canvas");
-  let engravedFor = "";
+  let engravedFor = "", plateUniforms = null;
   async function engrave(doors) {
     const key = lang + "|" + doors.map(d => t(d.plate)).join("|");
     if (key === engravedFor) return;
     const family = lang === "zh" ? '700 64px "Noto Serif TC"' : "600 64px Cinzel";
     await Promise.race([document.fonts.load(family), new Promise(r => setTimeout(r, 2500))]).catch(() => {});
     const RW = 1024, gap = 12;
-    const heights = SLOTS.map(sl => { const [w, h] = quadSize(sl.quad); return Math.round(RW / (w / h)); });
+    const heights = SLOTS.map(sl => { const [w, h] = quadSize(sl.plate); return Math.round(RW / (w / h)); });
     atlas.width = RW; atlas.height = heights.reduce((a, h) => a + h + gap, 0);
     const g = atlas.getContext("2d");
     g.clearRect(0, 0, atlas.width, atlas.height);
@@ -328,14 +332,11 @@
       rows.push(y / atlas.height, (y + h) / atlas.height);
       fitText(g, t(doors[i].plate), RW / 2, y + h * 0.54, RW * 0.88, h);
       y += h + gap;
-      H.push(...homography(sl.quad));
-      box.push(...bbox(sl.quad, 2));
+      H.push(...homography(sl.plate));
+      box.push(...bbox(sl.plate, 2));
     });
     upload(4, atlas);
-    gl.useProgram(prog);
-    gl.uniformMatrix3fv(U.uPH, false, new Float32Array(H));
-    gl.uniform4fv(U.uPBox, new Float32Array(box));
-    gl.uniform2fv(U.uPRow, new Float32Array(rows));
+    plateUniforms = { H: new Float32Array(H), box: new Float32Array(box), rows: new Float32Array(rows) };
     engravedFor = key;
   }
   function fitText(g, text, cx, cy, maxW, h) {
@@ -361,48 +362,44 @@
     one(words.slice(best).join(" "), sz2, cy + sz2 * 0.6);
   }
 
-  /* ---------- pictures hung in rooms whose project changed ---------- */
-  const coverState = [0, 0, 0], coverTarget = [0, 0, 0], coverSrc = ["", "", ""];
-  function hangPictures(doors) {
-    const H = [], box = [], fit = [];
-    COVER_SLOTS.forEach((slot, k) => {
-      const sl = SLOTS[slot], cv = sl.cover, d = doors[slot];
-      const [w, h] = quadSize(cv.quad);
-      H.push(...homography(cv.quad));
-      box.push(...bbox(cv.quad, cv.framed ? 8 : 0));
-      fit.push(1, 1, w / h, cv.framed ? 1 : 0);
-      const want = !d.painted && d.image ? d.image : "";
-      if (want === coverSrc[k]) return;
-      coverSrc[k] = want; coverTarget[k] = 0;
-      if (!want) return;
-      loadImg(want).then(img => {
-        if (coverSrc[k] !== want) return;
-        upload(5 + k, img);
-        const ia = img.naturalWidth / img.naturalHeight, qa = w / h;
-        const f = ia > qa ? [qa / ia, 1] : [1, ia / qa];
-        fitCache[k] = f;
-        gl.useProgram(prog);
-        writeFit();
-        coverTarget[k] = 1;
-      }).catch(() => {});
-    });
-    gl.useProgram(prog);
-    gl.uniformMatrix3fv(U.uCH, false, new Float32Array(H));
-    gl.uniform4fv(U.uCBox, new Float32Array(box));
-    coverGeom = fit;
-    writeFit();
+  /* ---------- pictures in the frames ---------- */
+  /* A repository without a picture gets a painted title card. */
+  function titleCard(d) {
+    const c = document.createElement("canvas"); c.width = 960; c.height = 600;
+    const g = c.getContext("2d");
+    const gr = g.createRadialGradient(480, 260, 40, 480, 300, 620);
+    gr.addColorStop(0, "#2f4a40"); gr.addColorStop(1, "#0e1a16");
+    g.fillStyle = gr; g.fillRect(0, 0, 960, 600);
+    g.strokeStyle = "rgba(217,164,65,.6)"; g.lineWidth = 4; g.strokeRect(46, 46, 868, 508);
+    g.fillStyle = "#f0d9a0"; g.textAlign = "center"; g.textBaseline = "middle";
+    let size = 92; g.font = `600 ${size}px Cinzel, Georgia, serif`;
+    const name = t(d.title);
+    while (size > 40 && g.measureText(name).width > 780) { size -= 4; g.font = `600 ${size}px Cinzel, Georgia, serif`; }
+    g.fillText(name, 480, d.line ? 250 : 300, 800);
+    if (d.line) {
+      g.fillStyle = "rgba(240,230,207,.82)"; g.font = "400 34px Cabin, sans-serif";
+      const words = t(d.line).split(/\s+/); let line = "", y = 350;
+      for (const w of words) {
+        const test = line ? line + " " + w : w;
+        if (g.measureText(test).width > 720 && line) { g.fillText(line, 480, y); y += 46; line = w; if (y > 470) break; } else line = test;
+      }
+      if (y <= 470 && line) g.fillText(line, 480, y);
+    }
+    return c;
   }
-  const fitCache = [[1, 1], [1, 1], [1, 1]];
-  let coverGeom = [1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0];
-  function writeFit() {
-    const f = [];
-    for (let k = 0; k < 3; k++) f.push(fitCache[k][0], fitCache[k][1], coverGeom[k * 4 + 2], coverGeom[k * 4 + 3]);
-    gl.uniform4fv(U.uCFit, new Float32Array(f));
+  const imgCache = {};
+  function pictureFor(d) {
+    const key = d.image || "card:" + d.repo + ":" + lang;
+    if (!imgCache[key]) imgCache[key] = d.image ? loadImg(d.image).catch(() => titleCard(d)) : Promise.resolve(titleCard(d));
+    return imgCache[key];
+  }
+  function fitFor(src, quad) {
+    const ia = (src.naturalWidth || src.width) / (src.naturalHeight || src.height);
+    const [w, h] = quadSize(quad), qa = w / h;
+    return ia > qa ? [qa / ia, 1] : [1, ia / qa];
   }
 
   /* ---------- the hall while it is on screen ---------- */
-  let mounted = null;
-
   function mount(opts) {
     if (!getGL()) return null;
     lang = opts.lang === "zh" ? "zh" : "en";
@@ -412,30 +409,22 @@
         <section class="ph-card" aria-live="polite">
           <h2 class="ph-card__title"><span data-title></span><small data-sub></small></h2>
           <p class="ph-card__line" data-line></p>
-          <div class="ph-card__steps">${t(L.steps)}</div>
-          <p class="ph-card__touch">${T(L.touch)}</p>
+          <div class="ph-card__steps" data-steps>${t(L.steps)}</div>
+          <p class="ph-card__touch" data-touch>${T(L.touch)}</p>
           <div class="ph-acts" data-acts></div>
         </section>
-        <div class="ph-hint" aria-hidden="true"><kbd>W</kbd><kbd>S</kbd> ${T(L.hint)}</div>
+        <div class="ph-hint" aria-hidden="true" data-hint><kbd>W</kbd><kbd>S</kbd> ${T(L.hint)}</div>
         <div class="ph-corner">
           <button class="ph-pill" type="button" data-reset>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-            ${T(L.reset)}
+            <span data-reset-label>${T(L.reset)}</span>
           </button>
         </div>
         <nav class="sr-only" aria-label="${T(L.doors)}" data-doorlist></nav>
-        <div class="ph-room" data-room hidden>
-          <div class="ph-room__inner">
-            <span class="ph-room__plate" data-room-plate></span>
-            <h2 data-room-title></h2>
-            <p data-room-line></p>
-            <div class="ph-acts" data-room-acts></div>
-            <p><button class="ph-btn" type="button" data-room-back>${T(L.back)}</button></p>
-          </div>
-        </div>
         <div class="ph-loading${loaded ? " is-done" : ""}" data-loading>${T(L.loading)}</div>
       </div>`);
-    const $ = sel => root.querySelector(sel);
+    const ui = root.querySelector(".ph-ui");
+    const $ = sel => ui.querySelector(sel);
     canvas.hidden = false;
     canvas.setAttribute("aria-label", t(L.canvas));
     document.body.classList.add("on-photo-hall");
@@ -443,13 +432,47 @@
     const st = {
       zoom: 0, zoomT: 0, pan: [0, 0], panT: [0, 0], par: [0, 0], parT: [0, 0],
       focus: [0.5, 0.52], focusT: [0.5, 0.52], glow: [0, 0, 0, 0, 0, 0],
-      sel: -1, fade: 0, fadeT: 0, inside: false, busy: false, drag: null, lastMove: 0, held: {}, lock: false
+      sel: -1, fade: 0, fadeT: 0, busy: false, drag: null, lastMove: 0, held: {}, lock: false,
+      scene: "hall", room: null, roomDoor: -1, hover: null
     };
     let doors = [], raf = 0, alive = true, engraveT = 0, engraveV = 0;
+    const cover = [0, 0, 0, 0], coverT = [0, 0, 0, 0];
+    let hallFit = [[1, 1], [1, 1], [1, 1], [1, 1]], roomFit = [1, 1], roomCover = 0;
 
-    /* coming back out of a door: start inside it and step back */
-    const cameFrom = opts.from || "";
+    /* uniforms that change with the scene */
+    function useHall() {
+      gl.useProgram(prog);
+      gl.uniform1i(U.uImg, 0); gl.uniform1i(U.uDepth, 1);
+      gl.uniform1i(U.uCv0, 5);
+      gl.uniform1f(U.uMasks, 1); gl.uniform1f(U.uCvLight, 0.82);
+      if (plateUniforms) {
+        gl.uniformMatrix3fv(U.uPH, false, plateUniforms.H);
+        gl.uniform4fv(U.uPBox, plateUniforms.box);
+        gl.uniform2fv(U.uPRow, plateUniforms.rows);
+      }
+      const H = [], box = [];
+      for (let i = 0; i < 4; i++) { H.push(...homography(SLOTS[i].frame)); box.push(...bbox(SLOTS[i].frame, 1)); }
+      gl.uniformMatrix3fv(U.uCH, false, new Float32Array(H));
+      gl.uniform4fv(U.uCBox, new Float32Array(box));
+      gl.uniform2fv(U.uCFit, new Float32Array(hallFit.flat()));
+    }
+    function useRoom(room) {
+      gl.useProgram(prog);
+      gl.uniform1i(U.uImg, 9); gl.uniform1i(U.uDepth, 10);
+      gl.uniform1i(U.uCv0, 11);
+      gl.uniform1f(U.uMasks, 0); gl.uniform1f(U.uCvLight, 0.95);
+      const H = [...homography(room.canvas)], box = [...bbox(room.canvas, 1)];
+      for (let i = 1; i < 4; i++) { H.push(...homography(room.canvas)); box.push(-9, -9, -8, -8); }
+      gl.uniformMatrix3fv(U.uCH, false, new Float32Array(H));
+      gl.uniform4fv(U.uCBox, new Float32Array(box));
+      gl.uniform2fv(U.uCFit, new Float32Array([...roomFit, 1, 1, 1, 1, 1, 1]));
+    }
 
+    function depthAt(s) {
+      if (st.scene !== "hall") return 140 / 255;
+      const x = Math.min(DW - 1, Math.max(0, Math.round(s[0] * (DW - 1)))), y = Math.min(DH - 1, Math.max(0, Math.round((1 - s[1]) * (DH - 1))));
+      return hallDepth[y * DW + x] / 255;
+    }
     function screenToImage(cx, cy) {
       const r = canvas.getBoundingClientRect();
       const u = (cx - r.left) / r.width, v = 1 - (cy - r.top) / r.height, va = r.width / r.height;
@@ -459,87 +482,155 @@
       const tx = qx - st.pan[0], ty = qy - st.pan[1], f = st.focus;
       let s = [f[0] + (tx - f[0]) / (1 + st.zoom * 0.7), f[1] + (ty - f[1]) / (1 + st.zoom * 0.7)];
       for (let i = 0; i < 6; i++) {
-        const x = Math.min(DW - 1, Math.max(0, Math.round(s[0] * (DW - 1)))), y = Math.min(DH - 1, Math.max(0, Math.round((1 - s[1]) * (DH - 1))));
-        const d = depthCPU[y * DW + x] / 255, k = 1 + st.zoom * (0.55 + 0.45 * d);
+        const d = depthAt(s), k = 1 + st.zoom * (0.55 + 0.45 * d);
         s = [f[0] + (tx - st.par[0] * (d - 0.45) - f[0]) / k, f[1] + (ty - st.par[1] * (d - 0.45) - f[1]) / k];
       }
       return [s[0] * IMG_W, (1 - s[1]) * IMG_H];
     }
-    const doorAt = (cx, cy) => { const p = screenToImage(cx, cy); return SLOTS.findIndex(sl => inPoly(p, sl.hit)); };
+    function hitAt(cx, cy) {
+      const p = screenToImage(cx, cy);
+      if (st.scene === "hall") { const i = SLOTS.findIndex(sl => inPoly(p, sl.hit)); return i >= 0 ? { door: i } : null; }
+      const room = st.room;
+      if (inPoly(p, room.canvas)) return { part: "painting" };
+      if (inPoly(p, room.far)) return { part: "far" };
+      return null;
+    }
     function panLimits() {
       const va = innerWidth / innerHeight, fx = va > IA ? 1 : va / IA, fy = va > IA ? IA / va : 1;
       return [Math.max(0.04, (1 - fx * OVER) / 2 + 0.02), Math.max(0.03, (1 - fy * OVER) / 2 + 0.02)];
     }
-    function centerOn(i) {
+    function centerOn(uv) {
       const [lx, ly] = panLimits();
-      st.panT = [Math.max(-lx, Math.min(lx, 0.5 - doors[i].uv[0])), Math.max(-ly, Math.min(ly, (0.5 - doors[i].uv[1]) * 0.4))];
+      st.panT = [Math.max(-lx, Math.min(lx, 0.5 - uv[0])), Math.max(-ly, Math.min(ly, (0.5 - uv[1]) * 0.4))];
     }
 
-    function actsHTML(d, i, withStep) {
-      const step = withStep ? `<button class="ph-btn ph-btn--brass" type="button" data-enter="${i}">${T(L.step)}</button>` : "";
-      return step + d.links.filter(l => l[1]).map(([label, url]) => `<a class="ph-btn" href="${esc(url)}" target="_blank" rel="noopener">${T(label)}${ext}</a>`).join("");
+    /* the card */
+    function linkHTML(label, url, brass) {
+      return `<a class="ph-btn${brass ? " ph-btn--brass" : ""}" href="${esc(url)}" target="_blank" rel="noopener">${T(label)}${ext}</a>`;
+    }
+    function setSteps(room) {
+      $("[data-steps]").innerHTML = t(room ? L.roomSteps : L.steps);
+      $("[data-touch]").textContent = t(room ? L.roomTouch : L.touch);
+      $("[data-hint]").hidden = !!room;
+      $("[data-reset-label]").textContent = t(room ? L.back : L.reset);
     }
     function showCard(i) {
       const title = $("[data-title]"), sub = $("[data-sub]"), line = $("[data-line]"), acts = $("[data-acts]");
+      if (st.scene === "room") {
+        const d = doors[st.roomDoor];
+        title.textContent = t(d.title); sub.textContent = t(d.sub); line.textContent = t(d.line);
+        acts.innerHTML = (d.noDemo ? "" : linkHTML(L.demo, d.demo, true)) +
+          `<button class="ph-btn" type="button" data-far>${T(L.readMore)}</button>` + linkHTML(L.github, d.github);
+        return;
+      }
       if (i < 0) { title.textContent = t(L.introTitle); sub.textContent = t(L.introSub); line.textContent = t(L.introLine); acts.innerHTML = ""; return; }
       const d = doors[i];
       title.textContent = t(d.title); sub.textContent = t(d.sub); line.textContent = t(d.line);
-      acts.innerHTML = actsHTML(d, i, true);
+      const step = `<button class="ph-btn ph-btn--brass" type="button" data-enter="${i}">${T(L.step)}</button>`;
+      const links = d.links ? d.links.map(([l, u]) => linkHTML(l, u)).join("") : (d.noDemo ? "" : linkHTML(L.demo, d.demo)) + linkHTML(L.github, d.github);
+      acts.innerHTML = step + links;
     }
     function select(i) {
       if (st.sel === i) return;
       st.sel = i; showCard(i);
       if (i >= 0) st.focusT = doors[i].uv.slice();
     }
-    function enter(i) {
-      if (st.busy || st.inside || i < 0) return;
-      select(i); st.busy = true; st.lock = true;
-      const d = doors[i];
-      st.focusT = d.uv.slice(); centerOn(i);
-      const start = performance.now(), z0 = st.zoom, dur = reduce.matches ? 1 : 1100;
+
+    /* walking: a short zoom toward a point, fading at the end */
+    function walk(toUvPoint, dur, then) {
+      st.busy = true; st.lock = true;
+      st.focusT = toUvPoint.slice(); centerOn(toUvPoint);
+      const start = performance.now(), z0 = st.zoom, d = reduce.matches ? 1 : dur;
       (function step(now) {
         if (!alive) return;
-        const k = Math.min(1, (now - start) / dur), e = k * k * (3 - 2 * k);
+        const k = Math.min(1, (now - start) / d), e = k * k * (3 - 2 * k);
         st.zoom = st.zoomT = z0 + (2.6 - z0) * e;
         st.fade = st.fadeT = Math.max(0, (k - 0.55) / 0.45) * 0.62;
-        if (k < 1) { requestAnimationFrame(step); return; }
-        if (d.target) { opts.navigate(d.target); return; }
-        openRoom(i);
+        if (k < 1) requestAnimationFrame(step); else then();
       })(start);
     }
-    function openRoom(i) {
-      const d = doors[i], room = $("[data-room]");
-      $("[data-room-plate]").textContent = t(d.plate);
-      $("[data-room-title]").textContent = t(d.title);
-      $("[data-room-line]").textContent = t(d.line);
-      $("[data-room-acts]").innerHTML = actsHTML(d, i, false);
-      room.hidden = false; requestAnimationFrame(() => room.classList.add("is-on"));
-      root.querySelector(".ph-ui").classList.add("is-inside");
-      st.inside = true; st.busy = false;
-      setTimeout(() => { const a = room.querySelector(".ph-btn"); if (a) a.focus(); }, 60);
+    /* arriving in a scene: start close and faded, settle back */
+    function arrive(uv) {
+      st.focus = uv.slice(); st.focusT = uv.slice();
+      st.zoom = reduce.matches ? 0 : 1.4; st.zoomT = 0;
+      st.fade = reduce.matches ? 0 : 0.5; st.fadeT = 0;
+      st.pan = [0, 0]; st.panT = [0, 0];
+      st.lock = false; st.busy = false;
+    }
+
+    function enter(i) {
+      if (st.busy || st.scene !== "hall" || i < 0) return;
+      select(i);
+      const d = doors[i];
+      walk(d.uv, 1050, () => {
+        if (i < 4 && SLOTS[i].room) openRoom(i);
+        else if (d.target) opts.navigate(d.target);
+        else { st.lock = false; st.busy = false; }
+      });
+    }
+    async function openRoom(i) {
+      const room = ROOMS[SLOTS[i].room], d = doors[i];
+      try {
+        if (!room.tex) { room.tex = await loadImg(BASE + room.src); }
+        upload(9, room.tex);
+        const pic = await pictureFor(d);
+        upload(11, pic);
+        roomFit = fitFor(pic, room.canvas);
+      } catch (e) { if (d.target) { opts.navigate(d.target); return; } }
+      if (!alive) return;
+      st.scene = "room"; st.room = room; st.roomDoor = i; roomCover = 1;
+      useRoom(room);
+      setSteps(true); showCard(-1);
+      arrive(toUv(center(room.canvas)));
+      canvas.classList.remove("on-door");
     }
     function leaveRoom() {
-      if (!st.inside) return;
-      const room = $("[data-room]"); room.classList.remove("is-on");
-      setTimeout(() => { room.hidden = true; }, reduce.matches ? 0 : 600);
-      root.querySelector(".ph-ui").classList.remove("is-inside");
-      st.inside = false; st.lock = false; st.zoomT = 0.35; st.fadeT = 0;
+      if (st.scene !== "room" || st.busy) return;
+      const i = st.roomDoor;
+      st.scene = "hall"; st.room = null; roomCover = 0;
+      useHall(); setSteps(false);
+      st.sel = -2; select(i);
+      arrive(doors[i].uv);
+      centerOn(doors[i].uv); st.pan = st.panT.slice();
       canvas.focus({ preventScroll: true });
     }
-    function reset() { if (st.inside) leaveRoom(); st.zoomT = 0; st.panT = [0, 0]; select(-1); st.focusT = [0.5, 0.52]; }
+    function throughFarDoor() {
+      if (st.scene !== "room" || st.busy) return;
+      const d = doors[st.roomDoor];
+      if (d.target) walk(toUv(st.room.farFocus), 900, () => opts.navigate(d.target));
+      else window.open(d.github, "_blank", "noopener");
+    }
+    function openPainting() {
+      const d = doors[st.roomDoor];
+      window.open(d.noDemo ? d.github : d.demo, "_blank", "noopener");
+    }
+    function reset() {
+      if (st.scene === "room") { leaveRoom(); return; }
+      st.zoomT = 0; st.panT = [0, 0]; select(-1); st.focusT = [0.5, 0.52];
+    }
 
     /* data */
-    function applyDoors(animate) {
+    function applyDoors() {
       doors = buildDoors(pinsData);
       $("[data-doorlist]").innerHTML = doors.map((d, i) => `<button type="button" data-enter="${i}">${T(d.plate)}: ${T(d.title)}</button>`).join("");
-      engrave(doors).then(() => { engraveT = 1; if (!animate) engraveV = 1; });
-      hangPictures(doors);
+      engrave(doors).then(() => { if (!alive) return; if (st.scene === "hall") useHall(); engraveT = 1; });
+      doors.slice(0, 4).forEach((d, k) => {
+        coverT[k] = 0;
+        pictureFor(d).then(pic => {
+          if (!alive) return;
+          upload(5 + k, pic);
+          hallFit[k] = fitFor(pic, SLOTS[k].frame);
+          if (st.scene === "hall") { gl.useProgram(prog); gl.uniform2fv(U.uCFit, new Float32Array(hallFit.flat())); }
+          coverT[k] = 1;
+        });
+      });
+      useHall();
       const keep = st.sel; st.sel = -2; select(keep < 0 ? -1 : keep);
     }
 
     /* input */
-    const on = (el, ev, fn, o) => { el.addEventListener(ev, fn, o); offs.push(() => el.removeEventListener(ev, fn, o)); };
     const offs = [];
+    const on = (el, ev, fn, o) => { el.addEventListener(ev, fn, o); offs.push(() => el.removeEventListener(ev, fn, o)); };
     on(canvas, "pointermove", e => {
       const r = canvas.getBoundingClientRect();
       const mx = (e.clientX - r.left) / r.width - 0.5, my = (e.clientY - r.top) / r.height - 0.5;
@@ -551,11 +642,11 @@
         if (Math.abs(dx) + Math.abs(dy) > 0.01) st.drag.moved = true;
         return;
       }
-      st.parT = [-mx * 0.036, my * 0.024];
-      if (st.inside || st.busy || !depthCPU) return;
-      const i = doorAt(e.clientX, e.clientY);
-      canvas.classList.toggle("on-door", i >= 0);
-      if (i >= 0) select(i);
+      st.parT = st.scene === "hall" ? [-mx * 0.036, my * 0.024] : [-mx * 0.012, my * 0.008];
+      if (st.busy || !hallDepth) return;
+      const h = hitAt(e.clientX, e.clientY);
+      canvas.classList.toggle("on-door", !!h);
+      if (st.scene === "hall" && h) select(h.door);
     });
     on(canvas, "pointerdown", e => {
       canvas.focus({ preventScroll: true });
@@ -565,14 +656,17 @@
     });
     on(canvas, "pointerup", e => {
       const d = st.drag; st.drag = null; canvas.classList.remove("dragging");
-      if (d && !d.moved && !st.inside && depthCPU) {
-        const i = doorAt(e.clientX, e.clientY);
-        if (i >= 0) { if (e.pointerType === "touch" && st.sel !== i) { select(i); centerOn(i); } else enter(i); }
-      }
+      if (!d || d.moved || st.busy || !hallDepth) return;
+      const h = hitAt(e.clientX, e.clientY);
+      if (!h) return;
+      if (st.scene === "hall") {
+        if (e.pointerType === "touch" && st.sel !== h.door) { select(h.door); centerOn(doors[h.door].uv); } else enter(h.door);
+      } else if (h.part === "painting") openPainting();
+      else if (h.part === "far") throughFarDoor();
     });
     on(canvas, "wheel", e => {
       e.preventDefault();
-      if (st.inside || st.busy) return;
+      if (st.busy) return;
       st.zoomT = Math.max(0, Math.min(1.1, st.zoomT - e.deltaY * 0.0011));
     }, { passive: false });
     on(window, "keydown", e => {
@@ -580,22 +674,23 @@
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
       if (e.target.closest && e.target.closest("a, button") && (e.key === "Enter" || e.key === " ")) return;
       const k = e.key.toLowerCase();
-      if (k === "escape") { if (st.inside) leaveRoom(); else reset(); return; }
-      if (st.inside || st.busy || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (k === "escape") { e.preventDefault(); reset(); return; }
+      if (st.busy || e.metaKey || e.ctrlKey || e.altKey) return;
       if (k === "w" || k === "arrowup") { st.held.f = true; e.preventDefault(); }
       else if (k === "s" || k === "arrowdown") { st.held.b = true; e.preventDefault(); }
-      else if (k === "a" || k === "arrowleft") { const n = st.sel <= 0 ? doors.length - 1 : st.sel - 1; select(n); centerOn(n); e.preventDefault(); }
-      else if (k === "d" || k === "arrowright") { const n = st.sel < 0 || st.sel >= doors.length - 1 ? 0 : st.sel + 1; select(n); centerOn(n); e.preventDefault(); }
+      else if (st.scene === "room") { if (k === "enter") { throughFarDoor(); e.preventDefault(); } }
+      else if (k === "a" || k === "arrowleft") { const n = st.sel <= 0 ? doors.length - 1 : st.sel - 1; select(n); centerOn(doors[n].uv); e.preventDefault(); }
+      else if (k === "d" || k === "arrowright") { const n = st.sel < 0 || st.sel >= doors.length - 1 ? 0 : st.sel + 1; select(n); centerOn(doors[n].uv); e.preventDefault(); }
       else if (k === "enter" || k === " ") { if (st.sel >= 0) { enter(st.sel); e.preventDefault(); } }
     });
     on(window, "keyup", e => { const k = e.key.toLowerCase(); if (k === "w" || k === "arrowup") st.held.f = false; if (k === "s" || k === "arrowdown") st.held.b = false; });
-    on(root, "click", e => {
+    on(ui, "click", e => {
       const b = e.target.closest("[data-enter]"); if (b) { enter(+b.dataset.enter); return; }
-      if (e.target.closest("[data-reset]")) { reset(); return; }
-      if (e.target.closest("[data-room-back]")) leaveRoom();
+      if (e.target.closest("[data-far]")) { throughFarDoor(); return; }
+      if (e.target.closest("[data-reset]")) reset();
     });
-    on(root, "focusin", e => { const b = e.target.closest("[data-doorlist] [data-enter]"); if (b) select(+b.dataset.enter); });
-    on(document, "visibilitychange", () => { if (!document.hidden && alive && !raf) raf = requestAnimationFrame(frame); });
+    on(ui, "focusin", e => { const b = e.target.closest("[data-doorlist] [data-enter]"); if (b && st.scene === "hall") select(+b.dataset.enter); });
+    on(document, "visibilitychange", () => { if (!document.hidden && alive && !raf) { last = performance.now(); raf = requestAnimationFrame(frame); } });
 
     /* render loop */
     let last = performance.now();
@@ -611,13 +706,14 @@
         st.fade = ease(st.fade, st.fadeT, 4);
       }
       const idle = !reduce.matches && now - st.lastMove > 2500 && !st.drag;
-      const drift = idle ? [Math.sin(now / 3300) * 0.012, Math.sin(now / 4700) * 0.008] : [0, 0];
+      const amp = st.scene === "hall" ? 1 : 0.35;
+      const drift = idle ? [Math.sin(now / 3300) * 0.012 * amp, Math.sin(now / 4700) * 0.008 * amp] : [0, 0];
       st.par = [ease(st.par[0], st.parT[0] + drift[0], 3), ease(st.par[1], st.parT[1] + drift[1], 3)];
       st.pan = [ease(st.pan[0], st.panT[0], 5), ease(st.pan[1], st.panT[1], 5)];
       st.focus = [ease(st.focus[0], st.focusT[0], 2.2), ease(st.focus[1], st.focusT[1], 2.2)];
-      for (let i = 0; i < 6; i++) st.glow[i] = ease(st.glow[i], i === st.sel && !st.inside ? 1 : 0, 6);
+      for (let i = 0; i < 6; i++) st.glow[i] = ease(st.glow[i], i === st.sel && st.scene === "hall" ? 1 : 0, 6);
       engraveV = ease(engraveV, engraveT, 6);
-      for (let k = 0; k < 3; k++) coverState[k] = ease(coverState[k], coverTarget[k], 3);
+      for (let k = 0; k < 4; k++) cover[k] = ease(cover[k], coverT[k], 3);
 
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = Math.round(innerWidth * dpr), h = Math.round(innerHeight * dpr);
@@ -629,38 +725,36 @@
       gl.uniform2f(U.uFocus, st.focus[0], st.focus[1]); gl.uniform1f(U.uZoom, st.zoom);
       gl.uniform1f(U.uTime, reduce.matches ? 0 : now / 1000); gl.uniform1f(U.uFade, st.fade);
       gl.uniform3f(U.uGA, st.glow[0], st.glow[1], st.glow[2]); gl.uniform3f(U.uGB, st.glow[3], st.glow[4], st.glow[5]);
-      gl.uniform1f(U.uAny, Math.max(...st.glow)); gl.uniform1f(U.uEngrave, engraveV);
-      gl.uniform3f(U.uCOn, coverState[0], coverState[1], coverState[2]);
+      gl.uniform1f(U.uAny, st.scene === "hall" ? Math.max(...st.glow) : 0);
+      gl.uniform1f(U.uEngrave, st.scene === "hall" ? engraveV : 0);
+      if (st.scene === "hall") gl.uniform4f(U.uCOn, cover[0], cover[1], cover[2], cover[3]);
+      else gl.uniform4f(U.uCOn, roomCover, 0, 0, 0);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       raf = requestAnimationFrame(frame);
     }
 
     init().then(() => {
       if (!alive) return;
-      applyDoors(false);
-      const back = doors.findIndex(d => d.target && d.target === cameFrom);
+      applyDoors();
+      const back = doors.findIndex(d => d.target && d.target === opts.from);
       if (back >= 0 && !reduce.matches) {
         st.sel = -2; select(back);
-        st.focus = doors[back].uv.slice(); st.focusT = st.focus.slice();
-        st.zoom = 1.6; st.zoomT = 0; st.fade = 0.4; st.fadeT = 0;
-        centerOn(back); st.pan = st.panT.slice();
+        arrive(doors[back].uv);
+        centerOn(doors[back].uv); st.pan = st.panT.slice();
       } else showCard(-1);
       $("[data-loading]").classList.add("is-done");
       last = performance.now();
       raf = requestAnimationFrame(frame);
     }).catch(() => { const l = $("[data-loading]"); if (l) l.textContent = t(L.failed); });
 
-    const cleanup = () => {
+    return () => {
       alive = false;
       if (raf) cancelAnimationFrame(raf);
       offs.forEach(f => f());
       canvas.hidden = true;
       canvas.classList.remove("on-door", "dragging");
       document.body.classList.remove("on-photo-hall");
-      mounted = null;
     };
-    mounted = cleanup;
-    return cleanup;
   }
 
   window.PhotoHall = { supported, mount };
