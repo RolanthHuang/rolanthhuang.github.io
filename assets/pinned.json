@@ -1,18 +1,11 @@
 {
   "source": "Pinned repositories of github.com/RolanthHuang, written by .github/workflows/pinned-doors.yml. While fewer than four are pinned, the hall fills its doors from SITE.hall.defaults in assets/projects.js.",
-  "updated": "2026-10-20T07:44:03.027Z",
+  "updated": "2026-10-21T11:57:48.938Z",
   "pinned": [
     {
       "repo": "Binance_Trading_Volume_3D_Terrain_Diagram",
       "description": "",
       "url": "https://github.com/RolanthHuang/Binance_Trading_Volume_3D_Terrain_Diagram",
-      "homepage": "",
-      "preview": ""
-    },
-    {
-      "repo": "surfingisland",
-      "description": "",
-      "url": "https://github.com/RolanthHuang/surfingisland",
       "homepage": "",
       "preview": ""
     },
@@ -31,16 +24,16 @@
       "preview": ""
     },
     {
-      "repo": "Multi-dimensional-choices",
+      "repo": "my_room",
       "description": "",
-      "url": "https://github.com/RolanthHuang/Multi-dimensional-choices",
+      "url": "https://github.com/RolanthHuang/my_room",
       "homepage": "",
       "preview": ""
     },
     {
-      "repo": "my_room",
-      "description": "",
-      "url": "https://github.com/RolanthHuang/my_room",
+      "repo": "house-rate-risk-transfer-cockpit",
+      "description": "Interactive 3D simulator for comparing original and risk-transferred house-rate exposure across synthetic wagering scenarios.",
+      "url": "https://github.com/RolanthHuang/house-rate-risk-transfer-cockpit",
       "homepage": "",
       "preview": ""
     }
