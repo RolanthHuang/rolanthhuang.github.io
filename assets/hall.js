@@ -72,8 +72,10 @@
     plateAbout: { en: "About & CV", zh: "關於與履歷" },
     plateAll: { en: "All Projects", zh: "所有專案" },
     doors: { en: "Doors", zh: "門" },
-    canvas: { en: "The hall of doors. Choose a door with A and D or the arrow keys, walk with W and S, step inside with Enter.", zh: "門廳。用 A、D 或方向鍵選門，W、S 前後走，Enter 走進去。" }
+    canvas: { en: "The hall of doors. Choose a door with A and D or the arrow keys, walk with W and S, step inside with Enter.", zh: "門廳。用 A、D 或方向鍵選門，W、S 前後走，Enter 走進去。" },
+    study: { en: "Or step into the study", zh: "或走進書房" }
   };
+  const candle = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.2c1.4 1.5 1.4 2.9 0 3.8-1.4-.9-1.4-2.3 0-3.8z" fill="#f0c66a"/><rect x="6.4" y="5.6" width="3.2" height="7" rx=".5" fill="currentColor"/><path d="M3.5 14.6h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
 
   /* ---------- small helpers ---------- */
   let lang = "en";
@@ -523,7 +525,11 @@
           `<button class="ph-btn" type="button" data-far>${T(L.readMore)}</button>` + linkHTML(L.github, d.github);
         return;
       }
-      if (i < 0) { title.textContent = t(L.introTitle); sub.textContent = t(L.introSub); line.textContent = t(L.introLine); acts.innerHTML = ""; return; }
+      if (i < 0) {
+        title.textContent = t(L.introTitle); sub.textContent = t(L.introSub); line.textContent = t(L.introLine);
+        acts.innerHTML = `<a class="ph-btn" href="study/${lang === "zh" ? "?lang=zh" : ""}">${candle}${T(L.study)}</a>`;
+        return;
+      }
       const d = doors[i];
       title.textContent = t(d.title); sub.textContent = t(d.sub); line.textContent = t(d.line);
       const step = `<button class="ph-btn ph-btn--brass" type="button" data-enter="${i}">${T(L.step)}</button>`;

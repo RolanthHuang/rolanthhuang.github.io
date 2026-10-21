@@ -18,9 +18,38 @@ The golden key on the table opens every door at once.
 | `assets/img/` | Screenshots: `name.jpg` (1280 × 800) and `name-sm.jpg` (640 × 400) |
 | `assets/og.jpg` | The preview image shown when the link is shared |
 | `cv/` | The two CV PDFs |
+| `study/` | The study: a candlelit 3D room (see below) |
 | `404.html` | Shown for any address that doesn't exist |
 
 Plain HTML, CSS and JavaScript. No build step, no dependencies. Opening `index.html` straight from disk works too.
+
+## The study
+
+`study/` is a hexagonal library drawn live with three.js, reached from the **Study** link in the top bar, the hall's welcome card and the All doors page.
+
+- Drag (or use the arrow keys) to look around, scroll to zoom.
+- **The portrait over the fire** turns to the next project, with its card: demo, plaque, source. The projects are every demo door in `assets/projects.js`, in room order.
+- **The bookcase** swings open onto a passage and the list of every live demo.
+- **The Klein bottle on the desk** holds the About text and both CVs.
+- **The two doors** lead back to the hall (left) and to all doors at once (right).
+
+All its words come from `assets/projects.js`, so editing that file updates the study too.
+To give a new project its painting, put `p_<image>.webp` (1024 × 672) in `study/tex/` and a half-size copy in `study/tex/lo/`, where `<image>` is the last part of the door's `image` path; without one, the portrait shows the painting of every door.
+
+Quality adapts to the device: phones get half-size textures and fewer effects, and if the frame rate stays low the room lowers its resolution and switches effects off one by one. Without WebGL 2 the study shows a still picture with the same three panels. Add `?q=low`, `?q=medium` or `?q=high` to the address to force a level.
+
+| Path | What it is |
+|---|---|
+| `study/index.html`, `study/study.css` | The page and its look |
+| `study/src/app.js` | Loading, quality levels, camera, clicks, the render loop |
+| `study/src/ui.js` | Every word in the study and the three panels |
+| `study/src/world.js`, `room.js`, `props.js`, `fx.js` | The room, its furniture, fire, moonlight and candles |
+| `study/src/post.js` | Ambient occlusion, moonbeam, bloom, depth of field, colour grade |
+| `study/tex/`, `study/tex/lo/` | Baked textures and paintings (desktop and phone sizes) |
+| `study/img/hero.jpg` | The picture shown while it loads, and without WebGL 2 |
+| `study/vendor/` | three.js r186 (MIT), bundled with two of its add-ons into one file |
+
+The study uses JavaScript modules, so it needs a web server: GitHub Pages, or `python3 -m http.server` in this folder, then open `http://localhost:8000/study/`. Opened straight from disk it can't load.
 
 ## The hall
 
@@ -64,7 +93,10 @@ If the workflow can't read your pins with the built-in token, add a personal acc
 
 要新增或修改內容，只改 `assets/projects.js`；換履歷就用同檔名覆蓋 `cv/` 裡的 PDF。
 
+書房（`study/`）是一個 3D 房間：壁爐上的肖像會轉到下一件作品，書櫃打開是所有 demo，桌上的克萊因瓶是關於我與履歷，兩扇門通回門廳與「所有門」。文字同樣來自 `assets/projects.js`；畫質會依裝置自動調整，網址加 `?q=low` / `?q=high` 可強制指定。
+
 ## Credits
 
 *Alice's Adventures in Wonderland* (1865) and *Through the Looking-Glass* (1871) by Lewis Carroll are in the public domain; the hall of doors, the golden key, the little door behind the curtain and the Caterpillar's question come from them.
-Fonts: IM Fell English, Cabin, Noto Serif TC and Noto Sans TC, served by Google Fonts under the SIL Open Font License.
+Fonts: IM Fell English, Cabin, Cinzel, Noto Serif TC and Noto Sans TC, served by Google Fonts under the SIL Open Font License.
+The study is drawn with [three.js](https://threejs.org/) (MIT License, `study/vendor/LICENSE-three.txt`); its textures, paintings and models are made for this site.

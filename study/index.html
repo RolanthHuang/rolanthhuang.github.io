@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>The study | Yi-Hsuan Huang</title>
+  <meta name="description" content="A candlelit study by Yi-Hsuan Huang (黃一玄), Senior Risk / ML Systems Engineer: the portrait over the fire turns through the projects, the bookcase opens onto every live demo, and a Klein bottle on the desk holds the About page and CV.">
+  <meta name="theme-color" content="#0b0806">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://rolanthhuang.github.io/study/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="The study | Yi-Hsuan Huang">
+  <meta property="og:description" content="A candlelit 3D study: projects on the portrait over the fire, live demos behind the bookcase, About and CV in a Klein bottle.">
+  <meta property="og:url" content="https://rolanthhuang.github.io/study/">
+  <meta property="og:image" content="https://rolanthhuang.github.io/study/img/hero.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&family=Cinzel:wght@600&family=IM+Fell+English:ital@0;1&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700&display=swap">
+  <link rel="stylesheet" href="study.css">
+  <link rel="preload" as="image" href="img/hero.jpg">
+  <script type="importmap">{ "imports": { "three": "./vendor/three.study.min.js" } }</script>
+</head>
+<body>
+  <div class="poster" id="poster" style="background-image:url('img/hero.jpg')"></div>
+  <canvas id="study" aria-hidden="true"></canvas>
+
+  <header class="sbar">
+    <a class="sbar__back" href="../#/" data-site="#/" data-i18n-label="backToHall" aria-label="Back to the hall of doors">
+      <svg viewBox="0 0 11 14" aria-hidden="true" focusable="false"><path d="M1 13.5V6a4.5 4.5 0 0 1 9 0v7.5" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+      <span data-i18n="hall">Hall</span>
+    </a>
+    <p class="sbar__title" data-i18n="title">The study</p>
+    <nav class="sbar__nav" aria-label="In the study" data-i18n-label="room">
+      <button type="button" data-go="portrait" data-i18n-label="navProjects" aria-label="Projects">
+        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><rect x="2.5" y="4" width="15" height="11" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 12.5l3.2-3.6 2.4 2.4 1.8-1.8 2.6 3" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M7 18h6" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span data-i18n="navProjects">Projects</span>
+      </button>
+      <button type="button" data-go="books" data-i18n-label="navDemos" aria-label="Demos">
+        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 3.5h3v13H3zM7.5 3.5h3v13h-3zM12 4.2l2.9-.8 3.4 12.6-2.9.8z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        <span data-i18n="navDemos">Demos</span>
+      </button>
+      <button type="button" data-go="klein" data-i18n-label="navAbout" aria-label="About and CV">
+        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M8 2.5h4M9 2.5v4.2c-3.3 1-5 3.5-5 6.3a6 6 0 0 0 12 0c0-2.8-1.7-5.3-5-6.3V2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M5.6 12.5c2.5 1.2 6.3 1.2 8.8 0" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+        <span data-i18n="navAbout">About &amp; CV</span>
+      </button>
+    </nav>
+    <div class="lang" role="group" aria-label="Language" data-i18n-label="language">
+      <button type="button" data-lang="en" aria-pressed="true">EN</button>
+      <button type="button" data-lang="zh" aria-pressed="false" lang="zh-Hant">中文</button>
+    </div>
+  </header>
+
+  <div class="hotspots" id="hotspots"></div>
+
+  <section class="intro" id="intro" hidden aria-live="polite">
+    <h1 data-i18n="introTitle">The study</h1>
+    <p data-intro-line data-i18n="introLine">The portrait over the fire turns to the next project. The bookcase hides every live demo. The glass bottle on the desk says who I am.</p>
+    <p class="intro__hint" data-hint></p>
+    <button type="button" data-intro-ok data-i18n="gotIt">Look around</button>
+  </section>
+
+  <div class="loader" id="loader" role="status">
+    <p class="loader__title" data-i18n="title">The study</p>
+    <p data-load-text data-i18n="loading">Lighting the candles…</p>
+    <div class="loader__bar"><i data-load-bar></i></div>
+  </div>
+
+  <aside class="panel" id="panel" hidden aria-labelledby="panel-title">
+    <button class="panel__close" type="button" data-close aria-label="Back to the room">
+      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+    <div class="panel__body" data-body></div>
+  </aside>
+
+  <div class="fade" id="fade"></div>
+
+  <noscript>
+    <section class="intro intro--fallback">
+      <h1>The study</h1>
+      <p>The 3D study needs JavaScript. Everything in it is also in the <a href="../">hall of doors</a>: <a href="../#/doors">every project</a>, <a href="../#/who">about me</a>, and my CV in <a href="../cv/Yi-Hsuan_Huang_CV_EN.pdf">English</a> and <a href="../cv/Yi-Hsuan_Huang_CV_ZH.pdf" lang="zh-Hant">中文</a>.</p>
+    </section>
+  </noscript>
+
+  <script src="../assets/projects.js"></script>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>

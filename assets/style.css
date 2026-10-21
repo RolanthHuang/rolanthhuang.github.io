@@ -781,6 +781,7 @@ p, dd, li { text-wrap: pretty; }
 
 @media (max-width: 420px) {
   .bar__link .label-long { display: none; }
+  .bar__link--study { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

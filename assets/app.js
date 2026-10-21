@@ -85,6 +85,9 @@
     thisSiteText: { en: "Plain HTML, CSS and JavaScript, with no build step. The source is in ", zh: "純 HTML、CSS 與 JavaScript，不需要建置。原始碼在" },
     ownRepo: { en: "its own repository", zh: "它自己的 repo" },
     aboutLink: { en: "About, methods and path", zh: "關於我、方法與經歷" },
+    study: { en: "Study", zh: "書房" },
+    studyTitle: { en: "The study", zh: "書房" },
+    studySay: { en: "A candlelit 3D room: the projects turn on the portrait over the fire, the demos wait behind the bookcase, and the Klein bottle on the desk holds the About page and CV.", zh: "點著蠟燭的 3D 房間：壁爐上的肖像轉過一件件作品，書櫃後藏著所有 demo，桌上的克萊因瓶裝著關於我與履歷。" },
     language: { en: "Language", zh: "語言" },
     site: { en: "Site", zh: "網站" }
   };
@@ -155,6 +158,7 @@
   }
 
   function wait(ms) { return new Promise(function (res) { setTimeout(res, ms); }); }
+  function studyHref() { return "study/" + (lang === "zh" ? "?lang=zh" : ""); }
 
   /* ---------- drawings ---------- */
 
@@ -617,7 +621,8 @@
       '<li><a href="#/who">' + T(UI.aboutLink) + "</a><p>" + T(SITE.who.openTo) + '</p><div class="index-links">' +
       '<a href="' + esc(P.cv.en) + '" target="_blank" rel="noopener">' + T(UI.cvEn) + '</a><a href="' + esc(P.cv.zh) + '" target="_blank" rel="noopener">' + T(UI.cvZh) + "</a>" +
       '<a href="mailto:' + esc(P.email) + '">' + T(UI.email) + '</a><a href="' + esc(P.linkedin) + '" target="_blank" rel="noopener">LinkedIn</a></div></li>' +
-      '<li><a href="#/garden">' + T(SITE.garden.title) + "</a><p>" + T(UI.gardenSay) + "</p></li></ul></section>";
+      '<li><a href="#/garden">' + T(SITE.garden.title) + "</a><p>" + T(UI.gardenSay) + "</p></li>" +
+      '<li><a href="' + studyHref() + '">' + T(UI.studyTitle) + "</a><p>" + T(UI.studySay) + "</p></li></ul></section>";
     return '<section class="view">' +
       '<div class="frame" style="--paint:#d9a441;--wall:#1f3a33">' + keystone("#/", t(UI.hall)) +
       '<div class="index"><header class="room-head"><h1 tabindex="-1">' + T(UI.keyTitle) + "</h1><p>" + T(UI.keyLine) + "</p></header>" +
@@ -972,6 +977,8 @@
     });
     var cv = document.getElementById("cv-link");
     if (cv) cv.href = SITE.person.cv[lang];
+    var study = document.querySelector(".bar__link--study");
+    if (study) study.href = studyHref();
     var group = document.querySelector(".lang");
     if (group) group.setAttribute("aria-label", t(UI.language));
     var nav = document.querySelector(".bar__nav");
