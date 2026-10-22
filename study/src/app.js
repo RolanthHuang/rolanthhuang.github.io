@@ -3,7 +3,7 @@ import { clamp, lerp } from './common.js';
 import { engrave, K } from './room.js';
 import { buildWorld } from './world.js';
 import { Pipeline } from './post.js';
-import { state as S, t, L, projectList, projectCardHTML, demosHTML, aboutHTML, makePanel, setLang, applyStatic, site } from './ui.js';
+import { state as S, t, L, projectList, loadPinned, projectCardHTML, demosHTML, aboutHTML, makePanel, setLang, applyStatic, site } from './ui.js';
 
 /* The study, live. Look around, click the portrait / bookcase / Klein bottle / doors.
    Quality adapts: a tier is picked from the device, then lowered while the frame rate stays poor. */
@@ -15,6 +15,7 @@ const DEG = Math.PI / 180;
 const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
 const $ = (s) => document.querySelector(s);
 const canvas = $('#study'), poster = $('#poster'), loader = $('#loader'), intro = $('#intro'), fadeEl = $('#fade'), hsRoot = $('#hotspots');
+await loadPinned();
 const PROJECTS = projectList();
 // The room opens on the ship in its bottle; the first turn of the portrait lands on the risk work.
 const START = Math.max(0, PROJECTS.findIndex((p) => p.door.id === 'ship-in-bottle'));

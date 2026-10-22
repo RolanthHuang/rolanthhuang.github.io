@@ -67,17 +67,45 @@ export const L = {
   of: { en: ' of ', zh: ' / ' },
 };
 
-/* The projects the portrait turns through: every demo door, one per demo link, in the site's room order. */
+/* The projects the portrait turns through: every demo door, one per demo link.
+   Order follows the repos pinned on GitHub (assets/pinned.json, kept fresh by the site's workflow):
+   pinned ones first in pin order, then the rest in room order. A pinned repo the site has no
+   write-up for still gets a plain frame, built from its GitHub description. */
+let PINNED = [];
+export async function loadPinned() {
+  try {
+    const r = await Promise.race([fetch('../assets/pinned.json'), new Promise((_, no) => setTimeout(no, 1500))]);
+    const j = r.ok ? await r.json() : null;
+    PINNED = (j && Array.isArray(j.pinned) ? j.pinned : []).filter((x) => x && x.repo);
+  } catch (e) { PINNED = []; }
+}
+const key = (x) => String(x || '').toLowerCase();
+const GEN_ROOM = { id: 'pinned', paint: '#8A6A2A', plate: { en: 'Pinned on GitHub', zh: 'GitHub 釘選' }, title: { en: 'Pinned on GitHub', zh: 'GitHub 釘選' } };
+const pretty = (n) => String(n).replace(/[-_]+/g, ' ').replace(/\b([a-z])/g, (m) => m.toUpperCase());
+function genericOf(x) {
+  const txt = { en: x.description || 'A project pinned on GitHub.', zh: x.description || '釘選在 GitHub 的專案。' };
+  const door = { id: 'gh-' + key(x.repo), kind: 'demo', repo: x.repo, demo: x.homepage || x.url, title: { en: pretty(x.repo), zh: pretty(x.repo) }, lede: txt, result: { en: '', zh: '' }, tags: [], plate: { en: pretty(x.repo), zh: pretty(x.repo) } };
+  return { room: GEN_ROOM, door, img: '', paint: 'p_all', generic: true };
+}
 export function projectList() {
-  const out = [], seen = new Set();
+  const base = [], seen = new Set();
   SITE.rooms.forEach((room) => room.doors.forEach((door) => {
     if (door.kind !== 'demo' || !door.demo || seen.has(door.demo)) return;
     seen.add(door.demo);
     const img = String(door.image || '').split('/').pop();
-    out.push({ room, door, img, paint: 'p_' + img });
+    base.push({ room, door, img, paint: 'p_' + img });
   }));
+  const out = [], used = new Set();
+  PINNED.forEach((x) => {
+    const hit = base.find((p) => !used.has(p) && key(p.door.repo) === key(x.repo));
+    if (hit) { used.add(hit); out.push(hit); return; }
+    const g = genericOf(x);
+    if (!seen.has(g.door.demo) && !out.some((o) => o.door.id === g.door.id)) { seen.add(g.door.demo); out.push(g); }
+  });
+  base.forEach((p) => { if (!used.has(p)) out.push(p); });
   return out;
 }
+export const extraProjects = () => projectList().filter((p) => p.generic);
 
 /* Links back into the site keep the language the visitor is reading in. */
 export const site = (path) => (path.startsWith('#') ? '../' + (state.lang === 'zh' ? '?lang=zh' : '') + path : '../' + path);
@@ -92,11 +120,11 @@ export function projectCardHTML(p, i, n) {
     <h2 class="panel__title" id="panel-title" tabindex="-1">${T(d.title)}</h2>
     ${d.context ? `<p class="panel__context">${T(d.context)}</p>` : ''}
     <p class="panel__lede">${T(d.lede)}</p>
-    <p class="panel__text">${T(d.result)}</p>
+    ${d.result && (d.result.en || d.result.zh) ? `<p class="panel__text">${T(d.result)}</p>` : ''}
     ${d.tags && d.tags.length ? `<ul class="chips">${d.tags.slice(0, 6).map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
     <div class="panel__acts">
       <a class="btn btn--brass" href="${esc(d.demo)}" target="_blank" rel="noopener">${T(L.openDemo)}${ext}</a>
-      <a class="btn" href="${esc(href)}">${T(L.readPlaque)}</a>
+      ${p.generic ? '' : `<a class="btn" href="${esc(href)}">${T(L.readPlaque)}</a>`}
       ${repo ? `<a class="btn btn--quiet" href="${esc(repo)}" target="_blank" rel="noopener">${T(L.source)}${ext}</a>` : ''}
     </div>
     <div class="panel__flip">
@@ -122,11 +150,13 @@ export function demosHTML() {
     }).join('');
     return items ? `<section class="demos__room"><h3><i style="--p:${esc(r.paint)}"></i>${T(r.title)}</h3><ul>${items}</ul></section>` : '';
   }).join('');
+  const extra = extraProjects().map((p) => `<li class="demo"><span class="demo__body"><span class="demo__title">${T(p.door.title)}</span><span class="demo__line">${T(p.door.lede)}</span><span class="demo__links"><a class="demo__open" href="${esc(p.door.demo)}" target="_blank" rel="noopener">${T(L.open)}${ext}</a></span></span></li>`).join('');
+  const groups2 = groups + (extra ? `<section class="demos__room"><h3><i style="--p:${esc(GEN_ROOM.paint)}"></i>${T(GEN_ROOM.title)}</h3><ul>${extra}</ul></section>` : '');
   return `
     <p class="panel__kicker">${T(L.booksKicker)}</p>
     <h2 class="panel__title" id="panel-title" tabindex="-1">${T(L.booksTitle)}</h2>
     <p class="panel__text panel__text--dim">${T(L.booksLine)}</p>
-    <div class="demos">${groups}</div>
+    <div class="demos">${groups2}</div>
     <p class="panel__foot">${T(L.garden)} <a href="${esc(site('#/garden'))}">${T(L.gardenLink)}</a></p>`;
 }
 
