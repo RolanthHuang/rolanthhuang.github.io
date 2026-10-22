@@ -1,18 +1,18 @@
 {
   "source": "Pinned repositories of github.com/RolanthHuang, written by .github/workflows/pinned-doors.yml. While fewer than four are pinned, the hall fills its doors from SITE.hall.defaults in assets/projects.js.",
-  "updated": "2026-10-21T11:57:48.938Z",
+  "updated": "2026-10-22T11:59:57.443Z",
   "pinned": [
+    {
+      "repo": "spellivery",
+      "description": "",
+      "url": "https://github.com/RolanthHuang/spellivery",
+      "homepage": "https://rolanthhuang.github.io/spellivery/",
+      "preview": ""
+    },
     {
       "repo": "Binance_Trading_Volume_3D_Terrain_Diagram",
       "description": "",
       "url": "https://github.com/RolanthHuang/Binance_Trading_Volume_3D_Terrain_Diagram",
-      "homepage": "",
-      "preview": ""
-    },
-    {
-      "repo": "WOODWEAVE",
-      "description": "",
-      "url": "https://github.com/RolanthHuang/WOODWEAVE",
       "homepage": "",
       "preview": ""
     },
@@ -24,16 +24,23 @@
       "preview": ""
     },
     {
-      "repo": "my_room",
+      "repo": "hurst-spike-risk-demo",
       "description": "",
-      "url": "https://github.com/RolanthHuang/my_room",
+      "url": "https://github.com/RolanthHuang/hurst-spike-risk-demo",
       "homepage": "",
       "preview": ""
     },
     {
-      "repo": "house-rate-risk-transfer-cockpit",
-      "description": "Interactive 3D simulator for comparing original and risk-transferred house-rate exposure across synthetic wagering scenarios.",
-      "url": "https://github.com/RolanthHuang/house-rate-risk-transfer-cockpit",
+      "repo": "material-planning-scenario-simulator",
+      "description": "Synthetic material planning and supply-chain scenario simulator with static and dynamic browser demos.",
+      "url": "https://github.com/RolanthHuang/material-planning-scenario-simulator",
+      "homepage": "",
+      "preview": ""
+    },
+    {
+      "repo": "WOODWEAVE",
+      "description": "",
+      "url": "https://github.com/RolanthHuang/WOODWEAVE",
       "homepage": "",
       "preview": ""
     }
