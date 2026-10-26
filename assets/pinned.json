@@ -1,6 +1,6 @@
 {
   "source": "Pinned repositories of github.com/RolanthHuang, written by .github/workflows/pinned-doors.yml. While fewer than four are pinned, the hall fills its doors from SITE.hall.defaults in assets/projects.js.",
-  "updated": "2026-10-23T11:45:57.308Z",
+  "updated": "2026-10-26T13:12:10.725Z",
   "pinned": [
     {
       "repo": "Binance_Trading_Volume_3D_Terrain_Diagram",
@@ -27,6 +27,13 @@
       "repo": "WOODWEAVE",
       "description": "",
       "url": "https://github.com/RolanthHuang/WOODWEAVE",
+      "homepage": "",
+      "preview": ""
+    },
+    {
+      "repo": "chamberofstonematrix",
+      "description": "",
+      "url": "https://github.com/RolanthHuang/chamberofstonematrix",
       "homepage": "",
       "preview": ""
     }
