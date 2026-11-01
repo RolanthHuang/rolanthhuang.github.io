@@ -1,6 +1,6 @@
 {
   "source": "Pinned repositories of github.com/RolanthHuang, written by .github/workflows/pinned-doors.yml. While fewer than four are pinned, the hall fills its doors from SITE.hall.defaults in assets/projects.js.",
-  "updated": "2026-10-27T05:12:36.641Z",
+  "updated": "2026-11-01T13:32:20.115Z",
   "pinned": [
     {
       "repo": "Binance_Trading_Volume_3D_Terrain_Diagram",
@@ -24,23 +24,23 @@
       "preview": ""
     },
     {
-      "repo": "chamberofstonematrix",
-      "description": "",
-      "url": "https://github.com/RolanthHuang/chamberofstonematrix",
-      "homepage": "",
-      "preview": ""
-    },
-    {
-      "repo": "Multi-dimensional-choices",
-      "description": "",
-      "url": "https://github.com/RolanthHuang/Multi-dimensional-choices",
-      "homepage": "",
-      "preview": ""
-    },
-    {
       "repo": "rolanthhuang.github.io",
       "description": "",
       "url": "https://github.com/RolanthHuang/rolanthhuang.github.io",
+      "homepage": "",
+      "preview": ""
+    },
+    {
+      "repo": "material-planning-scenario-simulator",
+      "description": "Synthetic material planning and supply-chain scenario simulator with static and dynamic browser demos.",
+      "url": "https://github.com/RolanthHuang/material-planning-scenario-simulator",
+      "homepage": "",
+      "preview": ""
+    },
+    {
+      "repo": "Risk_control_on_Multi_dimension",
+      "description": "",
+      "url": "https://github.com/RolanthHuang/Risk_control_on_Multi_dimension",
       "homepage": "",
       "preview": ""
     }
