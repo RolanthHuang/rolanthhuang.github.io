@@ -13,13 +13,12 @@
   <meta property="og:image" content="https://rolanthhuang.github.io/study/quiet/poster.webp">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="stylesheet" href="study/quiet/study.css">
-  <link rel="preload" href="study/quiet/poster.webp" as="image">
   <script type="importmap">{"imports":{"three":"./study/vendor/three.study.min.js"}}</script>
 </head>
 <body>
   <main>
     <div id="room" class="room" role="region" aria-label="Interactive 3D study" data-label="room">
-      <div class="poster" aria-hidden="true"></div>
+      <div class="poster" aria-hidden="true" hidden></div>
       <canvas id="scene" tabindex="0" aria-label="Look around the 3D study" aria-describedby="controls-hint" data-label="look" hidden></canvas>
       <div class="hotspots">
         <nav id="wall-links" aria-label="Projects on the wall" data-label="wall"></nav>
@@ -43,7 +42,7 @@
     <div class="footer">
       <div class="identity">
         <h1 data-text="title">Quiet Study</h1>
-        <p id="controls-hint" data-text="hint">Drag to look around · Scroll to zoom</p>
+        <p id="controls-hint" data-text="hint" hidden>Drag to look around · Scroll to zoom</p>
         <p id="render-status" role="status" hidden></p>
       </div>
       <div class="controls" role="group" aria-label="Camera controls" data-label="controls" hidden>
@@ -70,6 +69,6 @@
     </noscript>
   </main>
   <script src="assets/projects.js"></script>
-  <script type="module" src="study/quiet/study.js?v=close-view"></script>
+  <script type="module" src="study/quiet/study.js?v=room-loading"></script>
 </body>
 </html>

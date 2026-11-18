@@ -60,7 +60,7 @@ export function createPanorama({ canvas, artwork, plane, eye, onReady, onFailure
   }).catch(onFailure);
 
   function render(camera, viewportWidth, viewportHeight) {
-    if (!images) return;
+    if (!images) return false;
     const maxPixels = 870_000;
     const scale = Math.min(1, Math.sqrt(maxPixels / (viewportWidth * viewportHeight)));
     const w = Math.max(1, Math.round(viewportWidth * scale));
@@ -109,6 +109,7 @@ export function createPanorama({ canvas, artwork, plane, eye, onReady, onFailure
     }
     ctx.putImageData(buffer, 0, 0);
     output.hidden = false;
+    return true;
   }
 
   function updateArtwork() {

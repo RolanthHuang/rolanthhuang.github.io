@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 import { buildRoom } from './room.js';
-import { createPanorama } from './panorama.js';
+import { createPanorama } from './panorama.js?v=room-loading';
 
 const clamp = THREE.MathUtils.clamp;
 const TAU = 2 * Math.PI;
-const HOME = { yaw: 0.21, pitch: 0.012, zoom: 1 };
+const HOME = { yaw: 0.39, pitch: 0.012, zoom: 1 };
 const PANORAMA_HOME = { ...HOME, yaw: 0.08 };
 
-export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onLost }) {
+export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onReady, onLost }) {
   const { scene, sun, targets, gallery } = buildRoom();
   const plane = gallery.projection;
   const artwork = gallery.canvas;
@@ -18,7 +18,7 @@ export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onL
     catch (error) { console.warn('Switching to the panoramic study.', error); }
   }
   let panorama;
-  const eye = new THREE.Vector3(-1.85, 1.56, 4.65);
+  const eye = new THREE.Vector3(-3.25, 1.56, 4.28);
   const camera = new THREE.PerspectiveCamera(46, 1, 0.035, 32);
   camera.position.copy(eye);
   let home = HOME;
@@ -81,8 +81,12 @@ export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onL
       renderer.render(scene, camera);
       // Only the camera and wall artwork change, so the shadow map can be reused.
       renderer.shadowMap.autoUpdate = false;
-    } else {
-      panorama.render(camera, width, height);
+    } else if (!panorama.render(camera, width, height)) {
+      return;
+    }
+    if (canvas.hidden) {
+      canvas.hidden = false;
+      onReady();
     }
     for (const marker of markers) {
       const { position } = targets[marker.dataset.point];
@@ -240,7 +244,6 @@ export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onL
     usePanorama();
     render();
   }
-  canvas.hidden = false;
   return {
     cameraAction,
     showProjects(projects) {

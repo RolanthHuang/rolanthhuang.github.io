@@ -24,6 +24,7 @@ const copy = {
   loading: ['Loading pinned projects…', '載入置頂專案…'],
   noPins: ['No pinned repositories. Browse GitHub for all projects.', '目前沒有置頂專案。可到 GitHub 查看全部作品。'],
   pinsUnavailable: ['Pinned projects could not load. View them on GitHub.', '暫時無法載入置頂專案。可到 GitHub 查看。'],
+  loadingRoom: ['Loading the study…', '書房載入中…'],
   fallback: ['3D preview unavailable. Projects and CV are still accessible.', '目前無法顯示即時 3D，仍可開啟作品與履歷。'],
 };
 
@@ -239,12 +240,18 @@ function refreshLabels() {
   document.querySelectorAll('[data-label]').forEach((element) => { element.setAttribute('aria-label', tr(element.dataset.label)); });
   document.querySelectorAll('[data-person]').forEach((element) => { element.textContent = localized(person[element.dataset.person]); });
   document.querySelectorAll('[data-lang]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.lang === lang)));
-  $('#controls-hint').textContent = tr(touch ? 'touch' : 'hint');
-  $('#controls-hint').hidden = degraded;
-  $('#render-status').textContent = tr('fallback');
-  $('#render-status').hidden = !degraded;
+  refreshRenderStatus();
   if (panel.open) renderPanel();
   updateGallery();
+}
+
+function refreshRenderStatus() {
+  const ready = !$('#scene').hidden && !degraded;
+  $('#controls-hint').textContent = tr(touch ? 'touch' : 'hint');
+  $('#controls-hint').hidden = !ready;
+  $('#render-status').textContent = ready ? '' : tr(degraded ? 'fallback' : 'loadingRoom');
+  $('#render-status').hidden = ready;
+  $('.controls').hidden = !ready;
 }
 
 async function loadPins() {
@@ -266,7 +273,7 @@ async function loadPins() {
 function useFallback() {
   degraded = true;
   $('#scene').hidden = true;
-  $('.controls').hidden = true;
+  $('.poster').hidden = false;
   document.querySelectorAll('[data-point]').forEach((marker) => { marker.hidden = true; });
   $('#wall-links').hidden = true;
   refreshLabels();
@@ -293,7 +300,7 @@ panel.addEventListener('click', (event) => {
 
 refreshLabels();
 void loadPins();
-import('./viewer.js?v=close-view').then(({ startViewer }) => {
+import('./viewer.js?v=room-loading').then(({ startViewer }) => {
   view = startViewer({
     canvas: $('#scene'),
     markers: [...document.querySelectorAll('[data-point]')],
@@ -303,12 +310,12 @@ import('./viewer.js?v=close-view').then(({ startViewer }) => {
       if (href) location.assign(href);
       else openPanel(id);
     },
+    onReady: refreshRenderStatus,
     onLost: useFallback,
   });
   document.querySelectorAll('[data-camera]').forEach((button) => {
     button.addEventListener('click', () => view.cameraAction(button.dataset.camera));
   });
-  $('.controls').hidden = degraded;
   updateGallery();
 }).catch((error) => {
   console.warn('3D study could not start.', error);
