@@ -300,7 +300,7 @@ panel.addEventListener('click', (event) => {
 
 refreshLabels();
 void loadPins();
-import('./viewer.js?v=room-light-v2').then(({ startViewer }) => {
+import('./viewer.js?v=carved-study').then(({ startViewer }) => {
   view = startViewer({
     canvas: $('#scene'),
     markers: [...document.querySelectorAll('[data-point]')],

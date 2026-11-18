@@ -1,0 +1,41 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Render the study panorama</title>
+<script type="importmap">{"imports":{"three":"../study/vendor/three.study.min.js"}}</script>
+<h1>Render the study panorama</h1>
+<p>Serve the repository root. Render all six WebP faces and save them in <code>study/quiet/panorama/</code>.</p>
+<button type="button">Render faces</button>
+<ul></ul>
+<script type="module">
+  import * as THREE from 'three';
+  import { buildRoom, EYE, TONE_EXPOSURE } from '../study/quiet/room.js';
+
+  const faces = {
+    right: [[1, 0, 0], [0, 1, 0]], left: [[-1, 0, 0], [0, 1, 0]],
+    top: [[0, 1, 0], [0, 0, 1]], bottom: [[0, -1, 0], [0, 0, -1]],
+    back: [[0, 0, 1], [0, 1, 0]], front: [[0, 0, -1], [0, 1, 0]],
+  };
+  document.querySelector('button').addEventListener('click', async (event) => {
+    event.target.disabled = true;
+    const { scene } = buildRoom();
+    const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = TONE_EXPOSURE;
+    renderer.setSize(1024, 1024);
+    const camera = new THREE.PerspectiveCamera(90, 1, 0.035, 32);
+    camera.position.set(...EYE);
+    for (const [name, [direction, up]] of Object.entries(faces)) {
+      camera.up.set(...up);
+      camera.lookAt(camera.position.clone().add(new THREE.Vector3(...direction)));
+      renderer.render(scene, camera);
+      const file = await new Promise((resolve) => renderer.domElement.toBlob(resolve, 'image/webp', 0.91));
+      const link = document.createElement('a');
+      link.textContent = link.download = `${name}.webp`;
+      link.href = URL.createObjectURL(file);
+      const item = document.createElement('li');
+      item.append(link);
+      document.querySelector('ul').append(item);
+    }
+    renderer.dispose();
+  });
+</script>

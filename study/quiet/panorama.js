@@ -3,7 +3,7 @@ const faces = ['right', 'left', 'top', 'bottom', 'back', 'front'];
 
 async function readFace(name) {
   const image = new Image();
-  image.src = new URL('panorama/' + name + '.webp', import.meta.url).href;
+  image.src = new URL('panorama/' + name + '.webp?v=carved-study', import.meta.url).href;
   await image.decode();
   const size = image.naturalWidth;
   const canvas = document.createElement('canvas');

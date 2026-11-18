@@ -1,14 +1,12 @@
 import * as THREE from 'three';
-import { buildRoom } from './room.js?v=room-light-v2';
-import { createPanorama } from './panorama.js?v=room-loading';
+import { buildRoom, EYE, HOME, TONE_EXPOSURE } from './room.js?v=carved-study';
+import { createPanorama } from './panorama.js?v=carved-study';
 
 const clamp = THREE.MathUtils.clamp;
 const TAU = 2 * Math.PI;
-const HOME = { yaw: 0.39, pitch: 0.012, zoom: 1 };
-const PANORAMA_HOME = { ...HOME, yaw: 0.08 };
 
 export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onReady, onLost }) {
-  const { scene, sun, targets, gallery } = buildRoom();
+  const { scene, targets, gallery } = buildRoom();
   const plane = gallery.projection;
   const artwork = gallery.canvas;
   const gl = canvas.getContext('webgl2', { antialias: true, alpha: false });
@@ -18,20 +16,16 @@ export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onR
     catch (error) { console.warn('Switching to the panoramic study.', error); }
   }
   let panorama;
-  const eye = new THREE.Vector3(-3.25, 1.56, 4.28);
+  const eye = new THREE.Vector3(...EYE);
   const camera = new THREE.PerspectiveCamera(46, 1, 0.035, 32);
   camera.position.copy(eye);
-  let home = HOME;
-  const state = { ...home };
+  const state = { ...HOME };
   const low = quality === 'low' || (quality !== 'high' && matchMedia('(pointer: coarse)').matches);
   const ratio = low ? 1 : quality === 'high' ? 1.6 : 1.35;
   if (renderer) {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.02;
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowMap;
-    if (low) sun.shadow.mapSize.set(1024, 1024);
+    renderer.toneMappingExposure = TONE_EXPOSURE;
   }
   scene.updateMatrixWorld(true);
   const direction = new THREE.Vector3();
@@ -61,7 +55,7 @@ export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onR
     camera.aspect = width / height;
     // Crop in on wide screens while letting portrait screens look across the wall.
     const desktopCrop = THREE.MathUtils.smoothstep(camera.aspect, 1.15, 1.75);
-    const framing = THREE.MathUtils.lerp(1, renderer ? 1.16 : 1.21, desktopCrop);
+    const framing = THREE.MathUtils.lerp(1, 1.075, desktopCrop);
     const halfHeight = Math.tan(THREE.MathUtils.degToRad(23)) * Math.max(1, 1.26 / camera.aspect) / framing;
     fit = Math.min(THREE.MathUtils.radToDeg(2 * Math.atan(halfHeight)), 85);
   }
@@ -79,8 +73,6 @@ export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onR
     camera.updateMatrixWorld(true);
     if (renderer) {
       renderer.render(scene, camera);
-      // Only the camera and wall artwork change, so the shadow map can be reused.
-      renderer.shadowMap.autoUpdate = false;
     } else if (!panorama.render(camera, width, height)) {
       return;
     }
@@ -148,7 +140,7 @@ export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onR
 
   function cameraAction(action) {
     if (action === 'reset') {
-      Object.assign(state, home);
+      Object.assign(state, HOME);
       requestRender();
     } else {
       zoomBy(action === 'in' ? 1.17 : 1 / 1.17);
@@ -216,11 +208,6 @@ export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onR
   window.addEventListener('resize', requestRender);
   function usePanorama() {
     renderer = null;
-    // The panoramic fallback was captured from the original eye position.
-    eye.set(-0.52, 1.56, 5.03);
-    camera.position.copy(eye);
-    state.yaw += PANORAMA_HOME.yaw - home.yaw;
-    home = PANORAMA_HOME;
     width = height = 0;
     panorama = createPanorama({
       canvas, artwork, plane, eye, onReady: requestRender,
