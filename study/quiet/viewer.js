@@ -4,7 +4,8 @@ import { createPanorama } from './panorama.js';
 
 const clamp = THREE.MathUtils.clamp;
 const TAU = 2 * Math.PI;
-const HOME = { yaw: 0.045, pitch: 0.024, zoom: 1 };
+const HOME = { yaw: 0.21, pitch: 0.012, zoom: 1 };
+const PANORAMA_HOME = { ...HOME, yaw: 0.08 };
 
 export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onLost }) {
   const { scene, sun, targets, gallery } = buildRoom();
@@ -17,10 +18,11 @@ export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onL
     catch (error) { console.warn('Switching to the panoramic study.', error); }
   }
   let panorama;
-  const eye = new THREE.Vector3(-0.52, 1.56, 5.03);
+  const eye = new THREE.Vector3(-1.85, 1.56, 4.65);
   const camera = new THREE.PerspectiveCamera(46, 1, 0.035, 32);
   camera.position.copy(eye);
-  const state = { ...HOME };
+  let home = HOME;
+  const state = { ...home };
   const low = quality === 'low' || (quality !== 'high' && matchMedia('(pointer: coarse)').matches);
   const ratio = low ? 1 : quality === 'high' ? 1.6 : 1.35;
   if (renderer) {
@@ -57,8 +59,11 @@ export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onL
       renderer.setSize(width, height, false);
     }
     camera.aspect = width / height;
-    fit = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(23)) * Math.max(1, 1.26 / camera.aspect)));
-    fit = Math.min(fit, 85);
+    // Crop in on wide screens while letting portrait screens look across the wall.
+    const desktopCrop = THREE.MathUtils.smoothstep(camera.aspect, 1.15, 1.75);
+    const framing = THREE.MathUtils.lerp(1, renderer ? 1.16 : 1.21, desktopCrop);
+    const halfHeight = Math.tan(THREE.MathUtils.degToRad(23)) * Math.max(1, 1.26 / camera.aspect) / framing;
+    fit = Math.min(THREE.MathUtils.radToDeg(2 * Math.atan(halfHeight)), 85);
   }
 
   function render() {
@@ -139,7 +144,7 @@ export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onL
 
   function cameraAction(action) {
     if (action === 'reset') {
-      Object.assign(state, HOME);
+      Object.assign(state, home);
       requestRender();
     } else {
       zoomBy(action === 'in' ? 1.17 : 1 / 1.17);
@@ -207,6 +212,12 @@ export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onL
   window.addEventListener('resize', requestRender);
   function usePanorama() {
     renderer = null;
+    // The panoramic fallback was captured from the original eye position.
+    eye.set(-0.52, 1.56, 5.03);
+    camera.position.copy(eye);
+    state.yaw += PANORAMA_HOME.yaw - home.yaw;
+    home = PANORAMA_HOME;
+    width = height = 0;
     panorama = createPanorama({
       canvas, artwork, plane, eye, onReady: requestRender,
       onFailure: () => {

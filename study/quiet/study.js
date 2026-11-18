@@ -293,7 +293,7 @@ panel.addEventListener('click', (event) => {
 
 refreshLabels();
 void loadPins();
-import('./viewer.js').then(({ startViewer }) => {
+import('./viewer.js?v=close-view').then(({ startViewer }) => {
   view = startViewer({
     canvas: $('#scene'),
     markers: [...document.querySelectorAll('[data-point]')],
