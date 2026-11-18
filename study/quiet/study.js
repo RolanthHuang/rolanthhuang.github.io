@@ -300,7 +300,7 @@ panel.addEventListener('click', (event) => {
 
 refreshLabels();
 void loadPins();
-import('./viewer.js?v=glass-stability').then(({ startViewer }) => {
+import('./viewer.js?v=gradual-return').then(({ startViewer }) => {
   view = startViewer({
     canvas: $('#scene'),
     markers: [...document.querySelectorAll('[data-point]')],

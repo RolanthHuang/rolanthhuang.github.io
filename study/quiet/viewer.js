@@ -5,8 +5,7 @@ import { createPanorama } from './panorama.js?v=glass-stability';
 const clamp = THREE.MathUtils.clamp;
 const TAU = 2 * Math.PI;
 const DRAG_THRESHOLD = 7;
-const HOME_DELAY = 12_000;
-const HOME_DURATION = 2600;
+const HOME_DURATION = 8000;
 
 function angleBetween(start, end) {
   const delta = end - start;
@@ -48,8 +47,6 @@ export function startViewer({ canvas, markers, wallLinks, panel, quality, onSele
   let lost = false;
   let width = 0, height = 0, fit = 46;
   let pointer = null;
-  let hoverTarget = false;
-  let homeTimer = 0;
   let homeAnimation = null;
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -141,28 +138,26 @@ export function startViewer({ canvas, markers, wallLinks, panel, quality, onSele
   }
 
   function cancelHomeReturn() {
-    clearTimeout(homeTimer);
     homeAnimation = null;
   }
 
   function canReturnHome() {
     const focus = document.activeElement;
-    return !lost && !pointer && !hoverTarget && !panel.open && !document.hidden
-      && !reducedMotion.matches && !wallLinks.contains(focus) && !markers.includes(focus);
+    const inspecting = focus?.matches(':focus-visible')
+      && (wallLinks.contains(focus) || markers.includes(focus));
+    return !lost && !pointer && !panel.open && !document.hidden && !reducedMotion.matches && !inspecting;
   }
 
-  function scheduleHomeReturn() {
+  function startHomeReturn() {
     cancelHomeReturn();
     if (!canReturnHome()) return;
-    if (Math.abs(angleBetween(state.yaw, HOME.yaw)) + Math.abs(state.pitch - HOME.pitch) < 0.002) return;
-    homeTimer = setTimeout(() => {
-      if (!canReturnHome()) return;
-      homeAnimation = {
-        started: performance.now(), yaw: state.yaw, pitch: state.pitch,
-        yawDelta: angleBetween(state.yaw, HOME.yaw),
-      };
-      requestRender();
-    }, HOME_DELAY);
+    const yawDelta = angleBetween(state.yaw, HOME.yaw);
+    if (yawDelta === 0 && state.pitch === HOME.pitch && state.zoom === HOME.zoom) return;
+    homeAnimation = {
+      started: performance.now(), yaw: state.yaw, pitch: state.pitch,
+      yawDelta, logZoom: Math.log(state.zoom / HOME.zoom),
+    };
+    requestRender();
   }
 
   function updateHomeReturn(now) {
@@ -170,28 +165,31 @@ export function startViewer({ canvas, markers, wallLinks, panel, quality, onSele
       cancelHomeReturn();
       return;
     }
-    const { started, yaw, pitch, yawDelta } = homeAnimation;
-    const progress = THREE.MathUtils.smoothstep(now - started, 0, HOME_DURATION);
+    const { started, yaw, pitch, yawDelta, logZoom } = homeAnimation;
+    const elapsed = clamp((now - started) / HOME_DURATION, 0, 1);
+    if (elapsed === 1) {
+      Object.assign(state, HOME);
+      cancelHomeReturn();
+      return;
+    }
+    // Start gently, accelerate through most of the return, then settle at home.
+    const progress = elapsed ** 3 * (4 - 3 * elapsed);
     state.yaw = yaw + yawDelta * progress;
     state.pitch = THREE.MathUtils.lerp(pitch, HOME.pitch, progress);
-    if (progress < 1) {
-      requestRender();
-    } else {
-      state.yaw = HOME.yaw;
-      homeAnimation = null;
-    }
+    state.zoom = HOME.zoom * Math.exp(logZoom * (1 - progress));
+    requestRender();
   }
 
   function turn(deltaYaw, deltaPitch) {
     state.yaw = (state.yaw + deltaYaw) % TAU;
     state.pitch = clamp(state.pitch + deltaPitch, -1.36, 1.36);
-    scheduleHomeReturn();
+    startHomeReturn();
     requestRender();
   }
 
   function zoomBy(scale) {
     state.zoom = clamp(state.zoom * scale, 0.78, 2.05);
-    scheduleHomeReturn();
+    startHomeReturn();
     requestRender();
   }
 
@@ -214,12 +212,6 @@ export function startViewer({ canvas, markers, wallLinks, panel, quality, onSele
     return { id: Object.keys(targets).find((key) => targets[key].object === match.object) };
   }
 
-  function setHoverTarget(isTarget) {
-    if (isTarget === hoverTarget) return;
-    hoverTarget = isTarget;
-    scheduleHomeReturn();
-  }
-
   canvas.addEventListener('pointerdown', (event) => {
     if (pointer || !event.isPrimary || event.button !== 0) return;
     cancelHomeReturn();
@@ -228,9 +220,7 @@ export function startViewer({ canvas, markers, wallLinks, panel, quality, onSele
   });
   canvas.addEventListener('pointermove', (event) => {
     if (!pointer) {
-      const isTarget = Boolean(hit(event));
-      setHoverTarget(isTarget);
-      canvas.style.cursor = isTarget ? 'pointer' : '';
+      canvas.style.cursor = hit(event) ? 'pointer' : '';
       return;
     }
     if (event.pointerId !== pointer.id) return;
@@ -256,32 +246,28 @@ export function startViewer({ canvas, markers, wallLinks, panel, quality, onSele
     const target = isRelease ? hit(event) : null;
     const select = !pointer.moved && target;
     pointer = null;
-    hoverTarget = event.pointerType === 'mouse' && Boolean(target);
     canvas.classList.remove('dragging');
-    canvas.style.cursor = hoverTarget ? 'pointer' : '';
+    canvas.style.cursor = event.pointerType === 'mouse' && target ? 'pointer' : '';
     if (select) onSelect(select);
-    scheduleHomeReturn();
+    startHomeReturn();
   }
   canvas.addEventListener('pointerup', release);
   canvas.addEventListener('pointercancel', release);
   canvas.addEventListener('lostpointercapture', release);
-  canvas.addEventListener('pointerleave', () => setHoverTarget(false));
   canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
     zoomBy(Math.exp(clamp(-event.deltaY * 0.00085, -0.18, 0.18)));
   }, { passive: false });
 
   for (const element of [wallLinks, ...markers]) {
-    element.addEventListener('focusin', cancelHomeReturn);
-    element.addEventListener('focusout', () => queueMicrotask(scheduleHomeReturn));
+    element.addEventListener('focusin', () => {
+      if (!canReturnHome()) cancelHomeReturn();
+    });
+    element.addEventListener('focusout', () => queueMicrotask(startHomeReturn));
   }
-  for (const marker of markers) {
-    marker.addEventListener('pointerenter', () => setHoverTarget(true));
-    marker.addEventListener('pointerleave', () => setHoverTarget(false));
-  }
-  document.addEventListener('visibilitychange', scheduleHomeReturn);
-  reducedMotion.addEventListener('change', scheduleHomeReturn);
-  panel.addEventListener('close', scheduleHomeReturn);
+  document.addEventListener('visibilitychange', startHomeReturn);
+  reducedMotion.addEventListener('change', startHomeReturn);
+  panel.addEventListener('close', startHomeReturn);
 
   const keys = {
     ArrowLeft: () => turn(-0.11, 0), ArrowRight: () => turn(0.11, 0),
