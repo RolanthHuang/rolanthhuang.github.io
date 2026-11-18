@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { buildRoom } from './room.js';
+import { buildRoom } from './room.js?v=room-light-v2';
 import { createPanorama } from './panorama.js?v=room-loading';
 
 const clamp = THREE.MathUtils.clamp;

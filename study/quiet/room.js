@@ -12,11 +12,11 @@ const RADIUS = 1.52;
 const MOUTH = { left: -3.32, right: -0.86, bottom: 0.81, top: 1.75, radius: 0.25 };
 const VIEW = { x: 1.08, y: 2.075, width: 3.72, height: 2.05 };
 
-function stone(color, variation, baseShadow = 0) {
+function stone(color, variation, { edges = 0, partition = 0, recess = 0 } = {}) {
   const material = new THREE.MeshStandardMaterial({ color, roughness: 0.9, side: THREE.DoubleSide });
   material.onBeforeCompile = (shader) => {
     shader.uniforms.variation = { value: variation };
-    shader.uniforms.baseShadow = { value: baseShadow };
+    shader.uniforms.contactShadows = { value: new THREE.Vector3(edges, partition, recess) };
     shader.vertexShader = 'varying vec3 mineralPosition;\n' + shader.vertexShader;
     shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', `
       #include <begin_vertex>
@@ -25,18 +25,34 @@ function stone(color, variation, baseShadow = 0) {
     shader.fragmentShader = `
       varying vec3 mineralPosition;
       uniform float variation;
-      uniform float baseShadow;
+      uniform vec3 contactShadows;
       float mineralHash(vec3 p) {
         return fract(52.9829189 * fract(dot(p, vec3(.06711056, .00583715, .0421121))));
       }
     ` + shader.fragmentShader;
     shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
       #include <color_fragment>
-      float grain = mineralHash(floor(mineralPosition * 410.0)) - .5;
-      float cloud = sin(mineralPosition.x * 4.3 + sin(mineralPosition.z * 2.1))
-                  * sin(mineralPosition.y * 3.6 + mineralPosition.z * 3.2);
-      float floorContact = exp(-max(0.0, mineralPosition.y) * 10.0);
-      diffuseColor.rgb *= 1.0 + (grain * .63 + cloud * .25) * variation - floorContact * baseShadow;
+      float grain = mineralHash(floor(mineralPosition * 180.0)) - .5;
+      float mottling = sin(mineralPosition.x * 5.4 + sin(mineralPosition.z * 3.1))
+                     * sin(mineralPosition.y * 4.1 + mineralPosition.z * 3.9);
+      float floorContact = exp(-max(0.0, mineralPosition.y) * 9.0);
+      float ceilingContact = exp(-max(0.0, ${HEIGHT} - mineralPosition.y) * 6.0);
+
+      // Shade the floor and ceiling where they meet the built-in curved partition.
+      float curve = clamp((${LEFT + RADIUS} - mineralPosition.x) / ${RADIUS}, 0.0, 1.0);
+      float front = ${FRONT} + ${RADIUS} * (1.0 - sqrt(1.0 - curve * curve));
+      float sideDistance = max(max(${LEFT} - mineralPosition.x, mineralPosition.x - ${RIGHT}), 0.0);
+      float wallDistance = length(vec2(sideDistance, abs(mineralPosition.z - front)));
+      float partitionContact = exp(-wallDistance * 7.0);
+
+      // The rear of the alcove receives less of the room's reflected light.
+      float recessDepth = 1.0 - smoothstep(-2.91, -2.46, mineralPosition.z);
+      float recessEdge = min(abs(mineralPosition.y - ${MOUTH.bottom}), abs(mineralPosition.y - ${MOUTH.top}));
+      float recessContact = recessDepth * (.7 + .3 * exp(-recessEdge * 11.0));
+      float contact = contactShadows.x * (floorContact + ceilingContact * .65)
+                    + contactShadows.y * partitionContact
+                    + contactShadows.z * recessContact;
+      diffuseColor.rgb *= 1.0 + (grain * .38 + mottling * .48) * variation - contact;
     `);
   };
   return material;
@@ -190,15 +206,16 @@ function makeProjection(scene) {
 export function buildRoom() {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xe7ded1);
-  const plaster = stone(0xd9cbb8, 0.105, 0.16);
-  const envelope = stone(0xd8cbb9, 0.075, 0.07);
-  const limestone = stone(0xc8b49b, 0.15);
-  const reveal = stone(0xc1ab90, 0.075, 0.08);
+  const plaster = stone(0xd9cabb, 0.17, { edges: 0.26 });
+  const envelope = stone(0xd5c7b9, 0.12, { edges: 0.12 });
+  const ceiling = stone(0xd5c7b9, 0.12, { partition: 0.23 });
+  const limestone = stone(0xc5b3a0, 0.18, { partition: 0.31 });
+  const reveal = stone(0xc5af98, 0.13, { recess: 0.26 });
   const felt = stone(0x534b41, 0.2);
   const black = new THREE.MeshStandardMaterial({ color: 0x4d443a, roughness: 0.8 });
 
   slab(scene, limestone, 9.1, 0.22, 10.3, 0.22, -0.11, 0.65);
-  slab(scene, envelope, 9.1, 0.18, 10.3, 0.22, HEIGHT + 0.09, 0.65);
+  slab(scene, ceiling, 9.1, 0.18, 10.3, 0.22, HEIGHT + 0.09, 0.65);
   slab(scene, envelope, 0.19, HEIGHT, 10.3, -4.23, HEIGHT / 2, 0.65);
   slab(scene, envelope, 9.1, HEIGHT, 0.18, 0.22, HEIGHT / 2, -4.46);
   slab(scene, envelope, 9.1, HEIGHT, 0.18, 0.22, HEIGHT / 2, 5.74);
@@ -222,10 +239,10 @@ export function buildRoom() {
   slab(scene, envelope, 1.244, 2.568, 0.044, -1.03, 1.294, 5.6);
   slab(scene, black, 0.015, 0.2, 0.039, -0.54, 1.12, 5.563);
 
-  scene.add(new THREE.HemisphereLight(0xfcf2e1, 0xbe9c7d, 1.53));
-  scene.add(new THREE.AmbientLight(0xe4e1df, 0.35));
-  const sun = new THREE.DirectionalLight(0xffe4c4, 3.05);
-  sun.position.set(8.3, 6.9, -4.75);
+  scene.add(new THREE.HemisphereLight(0xfff4e9, 0xb59c89, 1.2));
+  scene.add(new THREE.AmbientLight(0xe4e1df, 0.15));
+  const sun = new THREE.DirectionalLight(0xffe5c7, 2.65);
+  sun.position.set(10.6, 4.9, -4.25);
   sun.target.position.set(0, 0, -0.36);
   sun.castShadow = true;
   sun.shadow.camera.left = -6.5;
@@ -235,13 +252,14 @@ export function buildRoom() {
   sun.shadow.camera.near = 0.2;
   sun.shadow.camera.far = 23;
   sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.radius = 2.6;
   sun.shadow.normalBias = 0.03;
   sun.shadow.bias = -0.0002;
   scene.add(sun, sun.target);
-  const bounce = new THREE.PointLight(0xffe6c8, 27, 13, 2);
-  bounce.position.set(1.9, 2.7, 0.7);
+  const bounce = new THREE.PointLight(0xffe9d5, 22, 13, 2);
+  bounce.position.set(-1.15, 2.43, 0.18);
   scene.add(bounce);
-  const doorLight = new THREE.PointLight(0xf1e5d6, 16, 9, 2);
+  const doorLight = new THREE.PointLight(0xf1e5d6, 12, 9, 2);
   doorLight.position.set(-1.2, 2.65, 4.4);
   scene.add(doorLight);
 
