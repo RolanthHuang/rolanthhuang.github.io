@@ -1,0 +1,79 @@
+name: Portfolio Pages and CV sync
+
+on:
+  schedule:
+    # Run after the scheduled pinned-repository update.
+    - cron: '43 */6 * * *'
+  push:
+    branches: [main]
+    paths:
+      - index.html
+      - 404.html
+      - .nojekyll
+      - 'assets/**'
+      - 'cv/**'
+      - 'study/**'
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish the site after validating both CV exports'
+        type: boolean
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: portfolio-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Stage public portfolio files
+        run: |
+          mkdir _site
+          git archive HEAD .nojekyll 404.html assets cv index.html study | tar -x -C _site
+      - name: Authenticate to Google Drive
+        id: drive
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: projects/1035360218704/locations/global/workloadIdentityPools/github-cv/providers/github-cv
+          service_account: github-cv-sync@yihsuanhuangcv.iam.gserviceaccount.com
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive.readonly
+          access_token_lifetime: 300s
+          create_credentials_file: false
+      - name: Export and validate both CVs
+        env:
+          DRIVE_ACCESS_TOKEN: ${{ steps.drive.outputs.access_token }}
+          CV_DOC_ID_ZH: ${{ secrets.CV_DOC_ID_ZH }}
+          CV_DOC_ID_EN: ${{ secrets.CV_DOC_ID_EN }}
+        run: python3 scripts/export-cv.py _site/cv
+      - name: Upload portfolio site
+        if: github.event_name != 'workflow_dispatch' || inputs.publish
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: _site
+
+  deploy:
+    if: github.event_name != 'workflow_dispatch' || inputs.publish
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy portfolio
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
