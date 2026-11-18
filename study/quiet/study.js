@@ -300,11 +300,12 @@ panel.addEventListener('click', (event) => {
 
 refreshLabels();
 void loadPins();
-import('./viewer.js?v=carved-study').then(({ startViewer }) => {
+import('./viewer.js?v=glass-stability').then(({ startViewer }) => {
   view = startViewer({
     canvas: $('#scene'),
     markers: [...document.querySelectorAll('[data-point]')],
     wallLinks: $('#wall-links'),
+    panel,
     quality: params.get('q'),
     onSelect: ({ id, href }) => {
       if (href) location.assign(href);

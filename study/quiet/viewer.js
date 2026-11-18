@@ -1,11 +1,19 @@
 import * as THREE from 'three';
-import { buildRoom, EYE, HOME, TONE_EXPOSURE } from './room.js?v=carved-study';
-import { createPanorama } from './panorama.js?v=carved-study';
+import { buildRoom, EYE, HOME, TONE_EXPOSURE } from './room.js?v=glass-stability';
+import { createPanorama } from './panorama.js?v=glass-stability';
 
 const clamp = THREE.MathUtils.clamp;
 const TAU = 2 * Math.PI;
+const DRAG_THRESHOLD = 7;
+const HOME_DELAY = 12_000;
+const HOME_DURATION = 2600;
 
-export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onReady, onLost }) {
+function angleBetween(start, end) {
+  const delta = end - start;
+  return Math.atan2(Math.sin(delta), Math.cos(delta));
+}
+
+export function startViewer({ canvas, markers, wallLinks, panel, quality, onSelect, onReady, onLost }) {
   const { scene, targets, gallery } = buildRoom();
   const plane = gallery.projection;
   const artwork = gallery.canvas;
@@ -40,6 +48,10 @@ export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onR
   let lost = false;
   let width = 0, height = 0, fit = 46;
   let pointer = null;
+  let hoverTarget = false;
+  let homeTimer = 0;
+  let homeAnimation = null;
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
   function resize() {
     const nextWidth = canvas.parentElement.clientWidth;
@@ -60,9 +72,10 @@ export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onR
     fit = Math.min(THREE.MathUtils.radToDeg(2 * Math.atan(halfHeight)), 85);
   }
 
-  function render() {
+  function render(now) {
     frame = 0;
     if (lost) return;
+    if (homeAnimation) updateHomeReturn(now);
     resize();
     const { yaw, pitch, zoom } = state;
     direction.set(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
@@ -127,19 +140,64 @@ export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onR
     if (!frame && !lost) frame = requestAnimationFrame(render);
   }
 
+  function cancelHomeReturn() {
+    clearTimeout(homeTimer);
+    homeAnimation = null;
+  }
+
+  function canReturnHome() {
+    const focus = document.activeElement;
+    return !lost && !pointer && !hoverTarget && !panel.open && !document.hidden
+      && !reducedMotion.matches && !wallLinks.contains(focus) && !markers.includes(focus);
+  }
+
+  function scheduleHomeReturn() {
+    cancelHomeReturn();
+    if (!canReturnHome()) return;
+    if (Math.abs(angleBetween(state.yaw, HOME.yaw)) + Math.abs(state.pitch - HOME.pitch) < 0.002) return;
+    homeTimer = setTimeout(() => {
+      if (!canReturnHome()) return;
+      homeAnimation = {
+        started: performance.now(), yaw: state.yaw, pitch: state.pitch,
+        yawDelta: angleBetween(state.yaw, HOME.yaw),
+      };
+      requestRender();
+    }, HOME_DELAY);
+  }
+
+  function updateHomeReturn(now) {
+    if (!canReturnHome()) {
+      cancelHomeReturn();
+      return;
+    }
+    const { started, yaw, pitch, yawDelta } = homeAnimation;
+    const progress = THREE.MathUtils.smoothstep(now - started, 0, HOME_DURATION);
+    state.yaw = yaw + yawDelta * progress;
+    state.pitch = THREE.MathUtils.lerp(pitch, HOME.pitch, progress);
+    if (progress < 1) {
+      requestRender();
+    } else {
+      state.yaw = HOME.yaw;
+      homeAnimation = null;
+    }
+  }
+
   function turn(deltaYaw, deltaPitch) {
     state.yaw = (state.yaw + deltaYaw) % TAU;
     state.pitch = clamp(state.pitch + deltaPitch, -1.36, 1.36);
+    scheduleHomeReturn();
     requestRender();
   }
 
   function zoomBy(scale) {
     state.zoom = clamp(state.zoom * scale, 0.78, 2.05);
+    scheduleHomeReturn();
     requestRender();
   }
 
   function cameraAction(action) {
     if (action === 'reset') {
+      cancelHomeReturn();
       Object.assign(state, HOME);
       requestRender();
     } else {
@@ -156,42 +214,74 @@ export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onR
     return { id: Object.keys(targets).find((key) => targets[key].object === match.object) };
   }
 
+  function setHoverTarget(isTarget) {
+    if (isTarget === hoverTarget) return;
+    hoverTarget = isTarget;
+    scheduleHomeReturn();
+  }
+
   canvas.addEventListener('pointerdown', (event) => {
     if (pointer || !event.isPrimary || event.button !== 0) return;
+    cancelHomeReturn();
     pointer = { id: event.pointerId, x: event.clientX, y: event.clientY, yaw: state.yaw, pitch: state.pitch, moved: false };
     canvas.setPointerCapture(event.pointerId);
   });
   canvas.addEventListener('pointermove', (event) => {
     if (!pointer) {
-      canvas.style.cursor = hit(event) ? 'pointer' : '';
+      const isTarget = Boolean(hit(event));
+      setHoverTarget(isTarget);
+      canvas.style.cursor = isTarget ? 'pointer' : '';
       return;
     }
     if (event.pointerId !== pointer.id) return;
     const dx = event.clientX - pointer.x, dy = event.clientY - pointer.y;
-    if (Math.hypot(dx, dy) > 5) pointer.moved = true;
+    const distance = Math.hypot(dx, dy);
+    if (distance > DRAG_THRESHOLD) pointer.moved = true;
     if (!pointer.moved) return;
     canvas.classList.add('dragging');
     canvas.style.cursor = 'grabbing';
-    const sensitivity = 0.0045 / state.zoom;
-    state.yaw = (pointer.yaw - dx * sensitivity) % TAU;
-    state.pitch = clamp(pointer.pitch + dy * sensitivity, -1.36, 1.36);
+
+    // Apply the dead zone without a jump. Favor the intended axis on near-straight drags.
+    const travel = Math.max(0, distance - DRAG_THRESHOLD) / Math.max(1, distance);
+    const horizontal = THREE.MathUtils.smoothstep(Math.abs(dx), distance * 0.13, distance * 0.69);
+    const vertical = THREE.MathUtils.smoothstep(Math.abs(dy), distance * 0.20, distance * 0.74);
+    const sensitivity = travel / state.zoom;
+    state.yaw = (pointer.yaw - dx * horizontal * sensitivity * 0.00345) % TAU;
+    state.pitch = clamp(pointer.pitch + dy * vertical * sensitivity * 0.0027, -1.36, 1.36);
     requestRender();
   });
   function release(event) {
     if (event.pointerId !== pointer?.id) return;
-    const select = event.type === 'pointerup' && !pointer.moved && hit(event);
+    const isRelease = event.type === 'pointerup';
+    const target = isRelease ? hit(event) : null;
+    const select = !pointer.moved && target;
     pointer = null;
+    hoverTarget = event.pointerType === 'mouse' && Boolean(target);
     canvas.classList.remove('dragging');
-    canvas.style.cursor = '';
+    canvas.style.cursor = hoverTarget ? 'pointer' : '';
     if (select) onSelect(select);
+    scheduleHomeReturn();
   }
   canvas.addEventListener('pointerup', release);
   canvas.addEventListener('pointercancel', release);
   canvas.addEventListener('lostpointercapture', release);
+  canvas.addEventListener('pointerleave', () => setHoverTarget(false));
   canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
-    zoomBy(Math.exp(clamp(-event.deltaY * 0.0011, -0.21, 0.21)));
+    zoomBy(Math.exp(clamp(-event.deltaY * 0.00085, -0.18, 0.18)));
   }, { passive: false });
+
+  for (const element of [wallLinks, ...markers]) {
+    element.addEventListener('focusin', cancelHomeReturn);
+    element.addEventListener('focusout', () => queueMicrotask(scheduleHomeReturn));
+  }
+  for (const marker of markers) {
+    marker.addEventListener('pointerenter', () => setHoverTarget(true));
+    marker.addEventListener('pointerleave', () => setHoverTarget(false));
+  }
+  document.addEventListener('visibilitychange', scheduleHomeReturn);
+  reducedMotion.addEventListener('change', scheduleHomeReturn);
+  panel.addEventListener('close', scheduleHomeReturn);
 
   const keys = {
     ArrowLeft: () => turn(-0.11, 0), ArrowRight: () => turn(0.11, 0),
@@ -213,6 +303,7 @@ export function startViewer({ canvas, markers, wallLinks, quality, onSelect, onR
       canvas, artwork, plane, eye, onReady: requestRender,
       onFailure: () => {
         lost = true;
+        cancelHomeReturn();
         cancelAnimationFrame(frame);
         window.removeEventListener('resize', requestRender);
         onLost();

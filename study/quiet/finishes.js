@@ -139,3 +139,51 @@ export function exterior() {
       }`,
   });
 }
+
+export function thinGlass() {
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    vertexShader: `
+      varying vec3 viewPoint;
+      varying vec3 viewNormal;
+      varying vec2 glassUV;
+      void main() {
+        vec4 positionInView = modelViewMatrix * vec4(position, 1.0);
+        viewPoint = positionInView.xyz;
+        viewNormal = normalMatrix * normal;
+        glassUV = uv;
+        gl_Position = projectionMatrix * positionInView;
+      }
+    `,
+    fragmentShader: `
+      #include <common>
+      varying vec3 viewPoint;
+      varying vec3 viewNormal;
+      varying vec2 glassUV;
+      void main() {
+        vec3 towardViewer = normalize(-viewPoint);
+        vec3 n = faceforward(normalize(viewNormal), -towardViewer, viewNormal);
+        float rim = pow(1.0 - max(0.0, dot(n, towardViewer)), 1.85);
+        vec3 bounced = inverseTransformDirection(reflect(-towardViewer, n), viewMatrix);
+        // Long reflections follow rounded surfaces and outline the overlapping sheets.
+        float slit = pow(max(0.0, dot(bounced, normalize(vec3(0.88, 0.32, 0.19)))), 24.0);
+        float room = pow(max(0.0, dot(bounced, normalize(vec3(-0.52, 0.61, 0.61)))), 15.0);
+        float reflection = max(slit, room * 0.65);
+        vec3 smoke = vec3(0.092, 0.049, 0.024);
+        vec3 highlight = vec3(1.45, 1.19, 0.87);
+        // This curve closes through the reversed seam and picks out the neck inside the body.
+        float width = clamp(fwidth(glassUV.y), 0.005, 0.02);
+        float etched = 1.0 - smoothstep(0.009, 0.009 + width, abs(glassUV.y - 0.25));
+        float insideNeck = smoothstep(0.48, 0.64, glassUV.x) * (1.0 - smoothstep(0.91, 1.0, glassUV.x));
+        float trace = etched * mix(0.08, 0.43, insideNeck);
+        vec3 color = mix(smoke, highlight, max(reflection, trace));
+        float opacity = 0.064 + 0.67 * rim + 0.63 * reflection + trace;
+        gl_FragColor = vec4(color, min(opacity, 0.87));
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }
+    `,
+  });
+}

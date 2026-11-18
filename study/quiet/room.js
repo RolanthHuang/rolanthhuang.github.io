@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { ParametricGeometry } from 'three';
 import { kleinFn } from './klein.js';
 import { createGallery } from './gallery.js';
-import { mineral, exterior } from './finishes.js?v=carved-study';
+import { mineral, exterior, thinGlass } from './finishes.js?v=glass-stability';
 
 export const ROOM = {
   height: 3.54, front: -2.46, back: -4.25, left: -3.56, right: 4.28, radius: 1.43,
@@ -169,36 +169,14 @@ function bottleOnSill(scene) {
   geometry.computeBoundingBox();
   const bounds = geometry.boundingBox;
   const center = bounds.getCenter(new THREE.Vector3());
-  const scale = 0.39 / (bounds.max.y - bounds.min.y);
+  const bottleHeight = 0.39 * 1.3;
+  const scale = bottleHeight / (bounds.max.y - bounds.min.y);
   geometry.translate(-center.x, -bounds.min.y, -center.z);
   geometry.scale(scale, scale, scale);
 
-  // A smoked, polished bronze surface picks up elongated reflections near the slit.
-  const bronze = new THREE.MeshPhysicalMaterial({ color: 0x8e765d, roughness: 0.22, metalness: 0.82,
-    clearcoat: 0.52, clearcoatRoughness: 0.12, side: THREE.DoubleSide });
-  const environment = document.createElement('canvas');
-  environment.width = 256;
-  environment.height = 128;
-  const ctx = environment.getContext('2d');
-  const sweep = ctx.createLinearGradient(0, 0, 0, 128);
-  sweep.addColorStop(0, '#d2c2af');
-  sweep.addColorStop(0.46, '#806b57');
-  sweep.addColorStop(0.57, '#b8a38b');
-  sweep.addColorStop(1, '#564638');
-  ctx.fillStyle = sweep;
-  ctx.fillRect(0, 0, 256, 128);
-  ctx.fillStyle = '#fff7df';
-  ctx.fillRect(133, 25, 5, 74);
-  ctx.fillStyle = '#e0c5a7';
-  ctx.fillRect(9, 33, 27, 47);
-  const reflection = new THREE.CanvasTexture(environment);
-  reflection.mapping = THREE.EquirectangularReflectionMapping;
-  reflection.colorSpace = THREE.SRGBColorSpace;
-  bronze.envMap = reflection;
-  bronze.envMapIntensity = 1.62;
-  const object = mesh(scene, geometry, bronze);
-  object.position.set(-1.33, desk.bottom + 0.003, -2.40);
-  object.rotation.y = -0.27;
+  const object = mesh(scene, geometry, thinGlass());
+  object.position.set(-1.36, desk.bottom + 0.003, -2.47);
+  object.rotation.y = 0.24;
   return object;
 }
 
@@ -256,10 +234,7 @@ export function buildRoom() {
   slab(scene, shadow, 1.27, 2.76, 0.022, -0.98, 1.38, 5.661);
   slab(scene, envelope, 1.246, 2.743, 0.037, -0.98, 1.372, 5.647);
   slab(scene, shadow, 0.018, 0.195, 0.036, -0.49, 1.14, 5.62);
-  const glint = new THREE.DirectionalLight(0xffedd7, 1.5);
-  glint.position.set(4.2, 3.1, -1.6);
-  scene.add(glint, new THREE.HemisphereLight(0xfff1db, 0x9b7855, 1.25));
   return { scene, gallery, targets: {
-    about: { object: bottle, position: bottle.position.clone().add(new THREE.Vector3(0.14, 0.14, 0.12)) },
+    about: { object: bottle, position: bottle.position.clone().add(new THREE.Vector3(0.31, 0.15, 0.13)) },
   } };
 }
