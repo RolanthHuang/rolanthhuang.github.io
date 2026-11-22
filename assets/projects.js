@@ -8,6 +8,8 @@
           "case" = a locked door: production work you can describe but not show.
   - image: path without the extension. Put two files in assets/img:
            name.jpg (1280 x 800) and name-sm.jpg (640 x 400).
+  - demoImage: optional full URL for a thumbnail maintained by the demo site.
+  - demoImageAlt: English and Chinese descriptions of that thumbnail.
   - focus: which part of the screenshot shows through the door's little window.
   - repo:  the GitHub repository name. The "updated" date is read live from GitHub
            when the page opens; the date written here is only the fallback.
@@ -248,6 +250,25 @@ window.SITE = {
         zh: "在任何人採取行動之前，回放發生過的事、預演可能發生的事。"
       },
       doors: [
+        {
+          id: "youbike-station-forecast",
+          kind: "demo",
+          paint: "#006B56",
+          plate: { en: "YouBike", zh: "YouBike" },
+          title: { en: "YouBike station forecast", zh: "YouBike 站點預測" },
+          lede: {
+            en: "Explore 1,826 Taipei stations and replay a one-hour bike forecast using two snapshots of five neighboring stations.",
+            zh: "瀏覽台北 1,826 個站點，切換五個鄰站的兩組歷史快照，重播一小時車輛預測。"
+          },
+          demo: "https://rolanthhuang.github.io/youbike_station_availables_forecast/",
+          demoImage: "https://rolanthhuang.github.io/youbike_station_availables_forecast/youbike-sm.jpg",
+          demoImageAlt: {
+            en: "YouBike station map and comparison of the original and what-if one-hour forecasts.",
+            zh: "YouBike 鄰站圖與一小時原始、替代情境預測比較。"
+          },
+          repo: "youbike_station_availables_forecast",
+          updated: "2026-11-23"
+        },
         {
           id: "market-terrain",
           kind: "demo",
