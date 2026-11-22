@@ -89,6 +89,8 @@ function link(text, href, { external = false, className, locale } = {}) {
 }
 
 const imagePath = (entry, pin) => {
+  const demoImage = safeWebUrl(entry?.door.demoImage);
+  if (demoImage) return demoImage;
   if (typeof pin?.preview === 'string' && /^assets\/pins\/[\w.-]+\.(?:jpe?g|png|webp)$/i.test(pin.preview)) {
     return asset(pin.preview);
   }
@@ -118,6 +120,7 @@ function describePin(pin) {
     url: pin.url,
     demo: safeWebUrl(entry?.door.demo) || safeWebUrl(pin.homepage) || details?.demo,
     image: imagePath(entry, pin) || details?.image,
+    imageAlt: localized(entry?.door.demoImageAlt),
   };
 }
 
@@ -126,6 +129,14 @@ function projectLinks(project, showRepo = true) {
   if (project.demo && project.demo !== project.url) actions.append(link(tr('live'), project.demo, { external: true }));
   if (showRepo && project.url) actions.append(link(tr('source'), project.url, { external: true }));
   return actions;
+}
+
+function projectThumbnail(src, alt = '') {
+  const thumbnail = node('img', '', 'project-image');
+  thumbnail.src = src;
+  thumbnail.alt = alt;
+  thumbnail.addEventListener('error', () => thumbnail.remove(), { once: true });
+  return thumbnail;
 }
 
 function renderPins() {
@@ -158,13 +169,7 @@ function renderPins() {
     if (index === selected) {
       const details = node('div', '', 'details');
       if (project.description) details.append(node('p', project.description));
-      if (project.image) {
-        const thumbnail = node('img', '', 'project-image');
-        thumbnail.src = project.image;
-        thumbnail.alt = '';
-        thumbnail.addEventListener('error', () => thumbnail.remove(), { once: true });
-        details.append(thumbnail);
-      }
+      if (project.image) details.append(projectThumbnail(project.image, project.imageAlt));
       details.append(projectLinks(project, false));
       item.append(details);
     }
@@ -186,6 +191,8 @@ function renderDemos() {
       const row = node('div', '', 'project-row');
       row.append(title);
       item.append(row);
+      const demoImage = safeWebUrl(door.demoImage);
+      if (demoImage) item.append(projectThumbnail(demoImage, localized(door.demoImageAlt)));
       list.append(item);
     }
     if (list.childElementCount) content.append(node('h3', localized(room.title), 'section-title'), list);
