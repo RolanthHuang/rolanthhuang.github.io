@@ -257,14 +257,14 @@ window.SITE = {
           plate: { en: "YouBike", zh: "YouBike" },
           title: { en: "YouBike station forecast", zh: "YouBike 站點預測" },
           lede: {
-            en: "Explore 1,826 Taipei stations and replay a one-hour bike forecast using two snapshots of five neighboring stations.",
-            zh: "瀏覽台北 1,826 個站點，切換五個鄰站的兩組歷史快照，重播一小時車輛預測。"
+            en: "Explore one-hour forecasts for 3,411 YouBike stations in Taipei and New Taipei.",
+            zh: "點選或搜尋雙北 3,411 個站點，查看一小時後的可借車預測。"
           },
           demo: "https://rolanthhuang.github.io/Youbike_Station_Forecasts/index.html",
-          demoImage: "https://rolanthhuang.github.io/youbike_station_availables_forecast/youbike-sm.jpg",
+          demoImage: "https://rolanthhuang.github.io/Youbike_Station_Forecasts/youbike-forecast.jpg",
           demoImageAlt: {
-            en: "YouBike station map and comparison of the original and what-if one-hour forecasts.",
-            zh: "YouBike 鄰站圖與一小時原始、替代情境預測比較。"
+            en: "Map of YouBike stations in Taipei and New Taipei with an example one-hour forecast.",
+            zh: "雙北 YouBike 站點分布與一小時預測範例。"
           },
           repo: "youbike_station_availables_forecast",
           updated: "2026-11-23"
