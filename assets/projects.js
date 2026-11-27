@@ -260,7 +260,7 @@ window.SITE = {
             en: "Explore 1,826 Taipei stations and replay a one-hour bike forecast using two snapshots of five neighboring stations.",
             zh: "瀏覽台北 1,826 個站點，切換五個鄰站的兩組歷史快照，重播一小時車輛預測。"
           },
-          demo: "https://rolanthhuang.github.io/youbike_station_availables_forecast/",
+          demo: "https://rolanthhuang.github.io/Youbike_Station_Forecasts/index.html",
           demoImage: "https://rolanthhuang.github.io/youbike_station_availables_forecast/youbike-sm.jpg",
           demoImageAlt: {
             en: "YouBike station map and comparison of the original and what-if one-hour forecasts.",
